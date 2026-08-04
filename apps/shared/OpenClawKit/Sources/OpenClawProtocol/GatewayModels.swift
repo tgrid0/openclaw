@@ -3380,6 +3380,20 @@ public struct NodeSkillsUpdateParams: Codable, Sendable {
     }
 }
 
+public struct NodeProtocolFeaturesUpdateParams: Codable, Sendable {
+    public let features: [String]
+
+    public init(
+        features: [String])
+    {
+        self.features = features
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case features
+    }
+}
+
 public struct NodePendingAckParams: Codable, Sendable {
     public let ids: [String]
 
@@ -3551,7 +3565,7 @@ public struct NodeInvokeRequestEvent: Codable, Sendable {
     public let paramsjson: String?
     public let timeoutms: Int?
     public let idempotencykey: String?
-    public let sessionkey: String?
+    public let sessionkey: AnyCodable?
 
     public init(
         id: String,
@@ -3560,7 +3574,7 @@ public struct NodeInvokeRequestEvent: Codable, Sendable {
         paramsjson: String? = nil,
         timeoutms: Int? = nil,
         idempotencykey: String? = nil,
-        sessionkey: String? = nil)
+        sessionkey: AnyCodable? = nil)
     {
         self.id = id
         self.nodeid = nodeid
