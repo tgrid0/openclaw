@@ -1,16 +1,12 @@
-import type { TrustedToolExecutionEvent } from "./diagnostic-events.js";
-
-const lifecycleGenerationByEvent = new WeakMap<TrustedToolExecutionEvent, string>();
+const lifecycleGenerationByEvent = new WeakMap<object, string>();
 
 export function captureTrustedToolExecutionLifecycleGeneration(
-  event: TrustedToolExecutionEvent,
+  event: object,
   lifecycleGeneration: string,
 ): void {
   lifecycleGenerationByEvent.set(event, lifecycleGeneration);
 }
 
-export function getTrustedToolExecutionLifecycleGeneration(
-  event: TrustedToolExecutionEvent,
-): string | undefined {
+export function getTrustedToolExecutionLifecycleGeneration(event: object): string | undefined {
   return lifecycleGenerationByEvent.get(event);
 }

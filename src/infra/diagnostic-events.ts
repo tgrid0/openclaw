@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { EmbeddedAgentExecutionPhase } from "../agents/embedded-agent-runner/execution-phase.js";
 import type { OpenClawConfig } from "../config/types.openclaw.js";
 import type { TalkBrain, TalkEventType, TalkMode, TalkTransport } from "../talk/talk-events.js";
-import { captureAgentRunLifecycleGeneration } from "./agent-events.js";
+import { getAgentRunExecutionLifecycleGeneration } from "./agent-run-execution-context.js";
 import { setInternalDiagnosticEventListenerCounts } from "./diagnostic-event-listener-presence.js";
 import {
   formatDiagnosticTraceparent,
@@ -1327,11 +1327,9 @@ function dispatchTrustedToolExecutionEvent(
     );
     return;
   }
-  if (typeof event.runId === "string" && event.runId.length > 0) {
-    captureTrustedToolExecutionLifecycleGeneration(
-      enriched,
-      captureAgentRunLifecycleGeneration(event.runId),
-    );
+  const lifecycleGeneration = getAgentRunExecutionLifecycleGeneration();
+  if (typeof event.runId === "string" && event.runId.length > 0 && lifecycleGeneration) {
+    captureTrustedToolExecutionLifecycleGeneration(enriched, lifecycleGeneration);
   }
   for (const listener of state.toolExecutionListeners) {
     try {

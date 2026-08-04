@@ -1,9 +1,13 @@
 // Stores and broadcasts agent lifecycle and streaming events.
-import { AsyncLocalStorage } from "node:async_hooks";
 import { resolveGlobalSingleton } from "../shared/global-singleton.js";
 import { notifyListeners, registerListener } from "../shared/listeners.js";
 import { hasInvalidLifecycleStartTimestamp } from "./agent-event-lifecycle.js";
 import { createAgentRunStaleLifecycleError } from "./agent-lifecycle-error.js";
+import {
+  getAgentRunExecutionLifecycleGeneration,
+  runOncePerAgentRun,
+  withAgentRunLifecycleGeneration,
+} from "./agent-run-execution-context.js";
 import {
   getAgentRunContext,
   getAgentRunContextOwnership,
@@ -88,12 +92,6 @@ type AgentEventState = {
 };
 
 const AGENT_EVENT_STATE_KEY = Symbol.for("openclaw.agentEvents.state");
-const AGENT_EVENT_EXECUTION_CONTEXT_KEY = Symbol.for("openclaw.agentEvents.executionContext");
-
-type AgentEventExecutionContext = {
-  lifecycleGeneration: string;
-  onceByRun: Map<string, Promise<unknown>>;
-};
 
 function getAgentEventState(): AgentEventState {
   return resolveGlobalSingleton<AgentEventState>(AGENT_EVENT_STATE_KEY, () => ({
@@ -107,37 +105,7 @@ registerAgentRunSequenceResetHandler((runId) => {
   getAgentEventState().seqByRun.delete(runId);
 });
 
-function getAgentEventExecutionContext() {
-  return resolveGlobalSingleton<AsyncLocalStorage<AgentEventExecutionContext>>(
-    AGENT_EVENT_EXECUTION_CONTEXT_KEY,
-    () => new AsyncLocalStorage<AgentEventExecutionContext>(),
-  );
-}
-
-/** Runs one execution with immutable ownership inherited by every emitted stream event. */
-export function withAgentRunLifecycleGeneration<T>(lifecycleGeneration: string, run: () => T): T {
-  const storage = getAgentEventExecutionContext();
-  const parent = storage.getStore();
-  const onceByRun =
-    parent?.lifecycleGeneration === lifecycleGeneration ? parent.onceByRun : new Map();
-  return storage.run({ lifecycleGeneration, onceByRun }, run);
-}
-
-/** Shares one operation across fallback attempts that belong to the same admitted run. */
-export function runOncePerAgentRun<T>(runId: string, operation: string, run: () => Promise<T>) {
-  const context = getAgentEventExecutionContext().getStore();
-  if (!context) {
-    return run();
-  }
-  const key = `${operation}:${runId}`;
-  const existing = context.onceByRun.get(key);
-  if (existing) {
-    return existing as Promise<T>;
-  }
-  const pending = Promise.resolve().then(run);
-  context.onceByRun.set(key, pending);
-  return pending;
-}
+export { runOncePerAgentRun, withAgentRunLifecycleGeneration };
 
 export function getAgentEventLifecycleGeneration(): string {
   return getAgentRunLifecycleGeneration();
@@ -170,7 +138,7 @@ export function assertAgentRunLifecycleGenerationCurrent(lifecycleGeneration: st
 /** Captures immutable lifecycle ownership for one admitted execution. */
 export function captureAgentRunLifecycleGeneration(runId: string): string {
   return (
-    getAgentEventExecutionContext().getStore()?.lifecycleGeneration ??
+    getAgentRunExecutionLifecycleGeneration() ??
     getAgentRunContext(runId)?.lifecycleGeneration ??
     getAgentRunLifecycleGeneration()
   );
@@ -217,7 +185,7 @@ function enrichAgentEvent(
   }
   const context = getAgentRunContext(event.runId);
   const executionLifecycleGeneration =
-    event.lifecycleGeneration ?? getAgentEventExecutionContext().getStore()?.lifecycleGeneration;
+    event.lifecycleGeneration ?? getAgentRunExecutionLifecycleGeneration();
   const ownedLifecycleGeneration = executionLifecycleGeneration ?? context?.lifecycleGeneration;
   if (
     executionLifecycleGeneration &&
