@@ -135,7 +135,11 @@ export function createGatewayHooksRequestHandler(params: {
       createdAtMs: nowMs,
       updatedAtMs: nowMs,
       schedule: { kind: "at", at: resolveTimestampMsToIsoString(nowMs) },
-      sessionTarget: "isolated",
+      // A caller-resolved sessionKey (request field or hook mapping) should bind this
+      // turn to that persistent session so repeat hook calls continue the same
+      // conversation, matching cron's documented "custom session" execution style
+      // instead of always spinning up a disposable `cron:<jobId>` session.
+      sessionTarget: `session:${sessionKey}`,
       wakeMode: value.wakeMode,
       payload: {
         kind: "agentTurn",
