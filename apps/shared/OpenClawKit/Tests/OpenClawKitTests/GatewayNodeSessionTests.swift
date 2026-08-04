@@ -570,6 +570,8 @@ private final class FakeGatewayWebSocketSession: WebSocketSessioning, GatewayTLS
     private let helloSessionDefaults: [String: Any]?
     private let helloDelayNanoseconds: UInt64
     private let connectError: [String: Any]?
+    private let protocolFeaturesError: [String: Any]?
+    private let protocolFeaturesResponseDelay: Duration
     private let cancelGate: FirstCancelGate?
     let effectiveTLSFingerprintSHA256: String?
     private var tasks: [FakeGatewayWebSocketTask] = []
@@ -582,6 +584,8 @@ private final class FakeGatewayWebSocketSession: WebSocketSessioning, GatewayTLS
         helloSessionDefaults: [String: Any]? = nil,
         helloDelayNanoseconds: UInt64 = 0,
         connectError: [String: Any]? = nil,
+        protocolFeaturesError: [String: Any]? = nil,
+        protocolFeaturesResponseDelay: Duration = .zero,
         cancelGate: FirstCancelGate? = nil,
         effectiveTLSFingerprintSHA256: String? = nil)
     {
@@ -590,6 +594,8 @@ private final class FakeGatewayWebSocketSession: WebSocketSessioning, GatewayTLS
         self.helloSessionDefaults = helloSessionDefaults
         self.helloDelayNanoseconds = helloDelayNanoseconds
         self.connectError = connectError
+        self.protocolFeaturesError = protocolFeaturesError
+        self.protocolFeaturesResponseDelay = protocolFeaturesResponseDelay
         self.cancelGate = cancelGate
         self.effectiveTLSFingerprintSHA256 = effectiveTLSFingerprintSHA256
     }
@@ -620,6 +626,8 @@ private final class FakeGatewayWebSocketSession: WebSocketSessioning, GatewayTLS
                 helloSessionDefaults: self.helloSessionDefaults,
                 helloDelayNanoseconds: self.helloDelayNanoseconds,
                 connectError: self.connectError,
+                protocolFeaturesError: self.protocolFeaturesError,
+                protocolFeaturesResponseDelay: self.protocolFeaturesResponseDelay,
                 cancelGate: self.cancelGate)
             self.tasks.append(task)
             return WebSocketTaskBox(task: task)
