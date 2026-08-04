@@ -94,6 +94,11 @@ export function createAuditEventWriter(
   const fail = (error: unknown) => {
     options.onError?.(error instanceof Error ? error.message : String(error));
   };
+  const postRecord = (input: AuditEventInput) => {
+    // Node Worker.postMessage is not the browser Window API and has no targetOrigin.
+    // oxlint-disable-next-line unicorn/require-post-message-target-origin
+    worker.postMessage({ type: "record", input });
+  };
 
   worker.on("message", (message: AuditWriterMessage) => {
     switch (message.type) {
@@ -146,9 +151,7 @@ export function createAuditEventWriter(
       }
       pending += 1;
       try {
-        // Node Worker.postMessage is not the browser Window API and has no targetOrigin.
-        // oxlint-disable-next-line unicorn/require-post-message-target-origin
-        worker.postMessage({ type: "record", input });
+        postRecord(input);
         return true;
       } catch (error) {
         pending -= 1;
@@ -170,8 +173,7 @@ export function createAuditEventWriter(
         try {
           // Shutdown records bypass the live queue cap but retain worker message
           // ordering, so the following stop drains them before exit.
-          // oxlint-disable-next-line unicorn/require-post-message-target-origin
-          worker.postMessage({ type: "record", input });
+          postRecord(input);
         } catch (error) {
           pending -= 1;
           unavailable = true;
