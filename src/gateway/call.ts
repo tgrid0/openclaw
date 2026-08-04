@@ -680,9 +680,9 @@ function resolveGatewayCallTimeout(
       ? resolvePreauthHandshakeTimeoutMs({ configuredTimeoutMs: configuredHandshakeTimeoutMs })
       : undefined;
   const defaultTimeoutMs =
-    typeof resolvedHandshakeTimeoutMs === "number" && resolvedHandshakeTimeoutMs > 10_000
+    typeof resolvedHandshakeTimeoutMs === "number" && resolvedHandshakeTimeoutMs > 10800 * 1000
       ? resolvedHandshakeTimeoutMs
-      : 10_000;
+      : 10800 * 1000;
   const explicitTimeoutMs =
     typeof timeoutValue === "number" && Number.isFinite(timeoutValue) ? timeoutValue : undefined;
   const startupTimeoutMs = explicitTimeoutMs ?? defaultTimeoutMs;

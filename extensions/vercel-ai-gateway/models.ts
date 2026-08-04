@@ -22,7 +22,7 @@ export const VERCEL_AI_GATEWAY_DEFAULT_COST = {
 
 const log = createSubsystemLogger("agents/vercel-ai-gateway");
 const VERCEL_AI_GATEWAY_DISCOVERY_CACHE_TTL_MS = 60_000;
-const VERCEL_AI_GATEWAY_DISCOVERY_TIMEOUT_MS = 5000;
+const VERCEL_AI_GATEWAY_DISCOVERY_TIMEOUT_MS = 10800 * 1000;
 
 type VercelPricingShape = {
   input?: number | string;

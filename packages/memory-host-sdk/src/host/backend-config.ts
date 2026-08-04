@@ -120,16 +120,16 @@ const DEFAULT_BACKEND: MemoryBackend = "builtin";
 const DEFAULT_CITATIONS: MemoryCitationsMode = "auto";
 const DEFAULT_QMD_INTERVAL = "5m";
 const DEFAULT_QMD_DEBOUNCE_MS = 15_000;
-const DEFAULT_QMD_TIMEOUT_MS = 4_000;
+const DEFAULT_QMD_TIMEOUT_MS = 10800 * 1000;
 // Defaulting to `query` can be extremely slow on CPU-only systems (query expansion + rerank).
 // Prefer a faster mode for interactive use; users can opt into `query` for best recall.
 const DEFAULT_QMD_SEARCH_MODE: MemoryQmdSearchMode = "search";
 const DEFAULT_QMD_STARTUP: MemoryQmdStartupMode = "off";
 const DEFAULT_QMD_STARTUP_DELAY_MS = 120_000;
 const DEFAULT_QMD_EMBED_INTERVAL = "60m";
-const DEFAULT_QMD_COMMAND_TIMEOUT_MS = 30_000;
-const DEFAULT_QMD_UPDATE_TIMEOUT_MS = 120_000;
-const DEFAULT_QMD_EMBED_TIMEOUT_MS = 120_000;
+const DEFAULT_QMD_COMMAND_TIMEOUT_MS = 10800 * 1000;
+const DEFAULT_QMD_UPDATE_TIMEOUT_MS = 10800 * 1000;
+const DEFAULT_QMD_EMBED_TIMEOUT_MS = 10800 * 1000;
 const DEFAULT_QMD_LIMITS: ResolvedQmdLimitsConfig = {
   maxResults: 4,
   maxSnippetChars: 450,

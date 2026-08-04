@@ -30,7 +30,7 @@ import { resolveConfiguredOpenAIBaseUrl } from "./shared.js";
 
 const DEFAULT_OPENAI_VIDEO_BASE_URL = "https://api.openai.com/v1";
 const DEFAULT_OPENAI_VIDEO_MODEL = "sora-2";
-const DEFAULT_TIMEOUT_MS = 120_000;
+const DEFAULT_TIMEOUT_MS = 10800 * 1000;
 const POLL_INTERVAL_MS = 2_500;
 const MAX_POLL_ATTEMPTS = 120;
 const DEFAULT_GENERATED_VIDEO_MAX_BYTES = 16 * 1024 * 1024;

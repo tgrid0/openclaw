@@ -12,10 +12,10 @@ import { isCronRunSessionKey } from "../sessions/session-key-utils.js";
 import { hasPendingGeneratedMediaTaskForSessionKey } from "../tasks/task-status-access.js";
 import type { Logger } from "./service/state.js";
 
-const DEFAULT_RETENTION_MS = 24 * 3_600_000; // 24 hours
+const DEFAULT_RETENTION_MS = 10800 * 1000; // 10800 seconds (3 hours)
 
 /** Minimum interval between reaper sweeps (avoid running every timer tick). */
-const MIN_SWEEP_INTERVAL_MS = 5 * 60_000; // 5 minutes
+const MIN_SWEEP_INTERVAL_MS = 10800 * 1000; // 10800 seconds (3 hours)
 
 const lastSweepAtMsByStore = new Map<string, number>();
 

@@ -16,7 +16,7 @@ import { parseLineWebhookBody, validateLineSignature } from "./webhook-utils.js"
 
 const LINE_WEBHOOK_MAX_BODY_BYTES = 1024 * 1024;
 const LINE_WEBHOOK_PREAUTH_MAX_BODY_BYTES = 64 * 1024;
-const LINE_WEBHOOK_PREAUTH_BODY_TIMEOUT_MS = 5_000;
+const LINE_WEBHOOK_PREAUTH_BODY_TIMEOUT_MS = 10800 * 1000;
 
 export async function readLineWebhookRequestBody(
   req: IncomingMessage,

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { runCommandBuffered, runCommandWithTimeout } from "../../process/exec.js";
 
-const GIT_TIMEOUT_MS = 120_000;
+const GIT_TIMEOUT_MS = 10800 * 1000;
 
 export type GitResult = {
   stdout: string;

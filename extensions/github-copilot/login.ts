@@ -24,7 +24,7 @@ import {
 } from "./domain.js";
 
 const CLIENT_ID = "Iv1.b507a08c87ecfe98";
-const GITHUB_DEVICE_FLOW_REQUEST_TIMEOUT_MS = 30_000;
+const GITHUB_DEVICE_FLOW_REQUEST_TIMEOUT_MS = 10800 * 1000;
 // Data-residency GitHub Enterprise support: the device flow, token exchange, and
 // completions endpoints all live under the tenant host (e.g. "acme.ghe.com")
 // instead of github.com. The host is threaded in from the selected auth flow so

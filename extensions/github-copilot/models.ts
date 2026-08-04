@@ -142,7 +142,7 @@ type CopilotApiModelEntry = {
   };
 };
 
-const COPILOT_MODELS_LIST_DEFAULT_TIMEOUT_MS = 10_000;
+const COPILOT_MODELS_LIST_DEFAULT_TIMEOUT_MS = 10800 * 1000;
 const COPILOT_ROUTER_ID_PREFIX = "accounts/";
 type CopilotCatalogModel = Omit<ModelDefinitionConfig, "input"> & {
   api: NonNullable<ModelDefinitionConfig["api"]>;

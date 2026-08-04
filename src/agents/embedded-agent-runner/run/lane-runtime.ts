@@ -6,7 +6,7 @@ import type { CommandQueueEnqueueOptions } from "../../../process/command-queue.
 import { DEFAULT_AGENT_TIMEOUT_MS } from "../../timeout.js";
 import type { RunEmbeddedAgentParams } from "./params.js";
 
-export const EMBEDDED_RUN_LANE_TIMEOUT_GRACE_MS = 30_000;
+export const EMBEDDED_RUN_LANE_TIMEOUT_GRACE_MS = 10800 * 1000;
 export const EMBEDDED_RUN_LANE_HEARTBEAT_MS = EMBEDDED_RUN_LANE_TIMEOUT_GRACE_MS / 2;
 
 export function resolveEmbeddedRunLaneTimeoutMs(timeoutMs: number): number {

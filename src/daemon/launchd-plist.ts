@@ -6,7 +6,7 @@ import type { GatewayServiceEnvironmentValueSource } from "./service-types.js";
 // crash loops back off instead of respawning every second while still allowing
 // explicit kickstart restarts to take effect.
 const LAUNCH_AGENT_THROTTLE_INTERVAL_SECONDS = 10;
-export const LAUNCH_AGENT_EXIT_TIMEOUT_SECONDS = 20;
+export const LAUNCH_AGENT_EXIT_TIMEOUT_SECONDS = 10800;
 // launchd stores plist integer values in decimal; 0o077 renders as 63 (owner-only files).
 const LAUNCH_AGENT_UMASK_DECIMAL = 0o077;
 const LAUNCH_AGENT_PROCESS_TYPE = "Interactive";

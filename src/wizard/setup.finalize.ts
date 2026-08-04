@@ -59,7 +59,7 @@ type FinalizeOnboardingOptions = {
   runtime: RuntimeEnv;
 };
 
-const HATCH_TUI_TIMEOUT_MS = 5 * 60 * 1000;
+const HATCH_TUI_TIMEOUT_MS = 10800 * 1000;
 
 function buildSessionGatewayAuthOverride(params: {
   nextConfig: OpenClawConfig;

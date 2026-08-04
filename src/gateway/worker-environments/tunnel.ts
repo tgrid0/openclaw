@@ -26,8 +26,8 @@ import { createWorkerWorkspaceActions, stableWorkerPathComponent } from "./works
 
 export type { WorkerTunnelHandle } from "./tunnel-contract.js";
 const REMOTE_SOCKET_NAME = "gateway.sock";
-const REMOTE_SETUP_TIMEOUT_MS = 20_000;
-const DEFAULT_STABLE_CONNECTION_MS = 30_000;
+const REMOTE_SETUP_TIMEOUT_MS = 10800 * 1000;
+const DEFAULT_STABLE_CONNECTION_MS = 10800 * 1000;
 const DEFAULT_BACKOFF: BackoffPolicy = {
   initialMs: 250,
   maxMs: 30_000,

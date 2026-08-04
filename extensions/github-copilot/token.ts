@@ -20,7 +20,7 @@ import {
   type CachedCopilotToken,
 } from "./token-cache.js";
 export const DEFAULT_COPILOT_API_BASE_URL = "https://api.individual.githubcopilot.com";
-const COPILOT_TOKEN_EXCHANGE_TIMEOUT_MS = 30_000;
+const COPILOT_TOKEN_EXCHANGE_TIMEOUT_MS = 10800 * 1000;
 let openConfiguredCacheStore: (() => PluginStateSyncKeyedStore<CachedCopilotToken>) | undefined;
 
 /** Bind provider-scoped SQLite state when the bundled plugin registers. */

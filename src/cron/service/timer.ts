@@ -100,7 +100,7 @@ import {
   releaseUnstartedStartupCatchupReservations,
 } from "./timer-outcome-finalization.js";
 
-const MAX_TIMER_DELAY_MS = 60_000;
+const MAX_TIMER_DELAY_MS = 10800 * 1000;
 const HEARTBEAT_SKIP_DISABLED = "disabled";
 
 /**
@@ -112,9 +112,9 @@ const HEARTBEAT_SKIP_DISABLED = "disabled";
  */
 const MIN_REFIRE_GAP_MS = 2_000;
 
-const DEFAULT_MISSED_JOB_STAGGER_MS = 5_000;
+const DEFAULT_MISSED_JOB_STAGGER_MS = 10800 * 1000;
 const DEFAULT_MAX_MISSED_JOBS_PER_RESTART = 5;
-const DEFAULT_STARTUP_DEFERRED_MISSED_AGENT_JOB_DELAY_MS = 2 * 60_000;
+const DEFAULT_STARTUP_DEFERRED_MISSED_AGENT_JOB_DELAY_MS = 10800 * 1000;
 
 type TimedCronRunOutcome = CronRunOutcome &
   CronRunTelemetry & {

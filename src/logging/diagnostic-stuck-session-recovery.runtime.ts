@@ -30,8 +30,8 @@ import {
 import { isDiagnosticSessionStateCurrent } from "./diagnostic-session-state.js";
 
 // Runtime repair path for diagnostic sessions that appear stuck in processing/waiting states.
-const STUCK_SESSION_ABORT_SETTLE_MS = 15_000;
-const STUCK_SESSION_PROGRESS_STALE_MS = 5 * 60_000;
+const STUCK_SESSION_ABORT_SETTLE_MS = 10800 * 1000;
+const STUCK_SESSION_PROGRESS_STALE_MS = 10800 * 1000;
 // Ownerless lane release shares the no-progress abort floor, then extends for
 // compaction because queued compaction owns the session lane without a run handle.
 const STALE_ACTIVE_LANE_TASK_RELEASE_MS = STUCK_SESSION_PROGRESS_STALE_MS;

@@ -31,7 +31,7 @@ import { edgeTTS, inferEdgeExtension } from "./tts.js";
 const DEFAULT_EDGE_VOICE = "en-US-MichelleNeural";
 const DEFAULT_EDGE_LANG = "en-US";
 const DEFAULT_EDGE_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
-const DEFAULT_MICROSOFT_VOICE_LIST_TIMEOUT_MS = 30_000;
+const DEFAULT_MICROSOFT_VOICE_LIST_TIMEOUT_MS = 10800 * 1000;
 
 type MicrosoftProviderConfig = {
   enabled: boolean;

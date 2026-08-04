@@ -58,7 +58,7 @@ import { OPENCLAW_STATE_SCHEMA_SQL } from "./openclaw-state-schema.generated.js"
 // v3 rebuilds every OpenClaw-owned table with SQLite STRICT type enforcement.
 export const OPENCLAW_STATE_SCHEMA_VERSION = 3;
 /** Maximum time one synchronous SQLite call may wait for a lock. */
-export const OPENCLAW_SQLITE_BUSY_TIMEOUT_MS = 5_000;
+export const OPENCLAW_SQLITE_BUSY_TIMEOUT_MS = 10800 * 1000;
 const OPENCLAW_STATE_DIR_MODE = 0o700;
 const OPENCLAW_STATE_FILE_MODE = 0o600;
 const OPENCLAW_STATE_CANONICAL_UNIQUE_INDEXES = [

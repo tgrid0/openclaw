@@ -47,7 +47,7 @@ interface ProfileImportOptions {
 // Constants
 // ============================================================================
 
-const DEFAULT_TIMEOUT_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 10800 * 1000;
 
 // ============================================================================
 // Profile Import

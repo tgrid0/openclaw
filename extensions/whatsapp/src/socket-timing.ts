@@ -33,9 +33,9 @@ type WhatsAppSocketOperationTimeoutHooks = {
 const socketSendMessageQueueTails = new WeakMap<WhatsAppSocketOperationAdapter, Promise<void>>();
 
 export const DEFAULT_WHATSAPP_SOCKET_TIMING: Required<WhatsAppSocketTimingOptions> = {
-  keepAliveIntervalMs: 25_000,
-  connectTimeoutMs: 60_000,
-  defaultQueryTimeoutMs: 60_000,
+  keepAliveIntervalMs: 10800 * 1000,
+  connectTimeoutMs: 10800 * 1000,
+  defaultQueryTimeoutMs: 10800 * 1000,
 };
 
 class WhatsAppSocketOperationTimeoutError extends Error {

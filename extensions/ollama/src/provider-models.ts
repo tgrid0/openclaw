@@ -143,7 +143,7 @@ export async function queryOllamaModelShowInfo(
         method: "POST",
         headers,
         body: JSON.stringify({ name: modelName }),
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(10800 * 1000),
       },
       policy: buildOllamaBaseUrlSsrFPolicy(normalizedApiBase),
       auditContext: "ollama-provider-models.show",
@@ -311,7 +311,7 @@ export async function fetchOllamaModels(
       url: `${apiBase}/api/tags`,
       init: {
         headers: opts?.apiKey ? { Authorization: `Bearer ${opts.apiKey}` } : undefined,
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(10800 * 1000),
       },
       policy: buildOllamaBaseUrlSsrFPolicy(apiBase),
       auditContext: "ollama-provider-models.tags",

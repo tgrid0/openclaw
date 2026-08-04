@@ -196,7 +196,7 @@ const loadHeartbeatRunnerRuntime = createLazyRuntimeModule(
 );
 
 const HEARTBEAT_ALWAYS_BUSY_LANES = [CommandLane.Cron, CommandLane.CronNested] as const;
-const DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 10 * 60;
+const DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 10800;
 
 function hasQueuedWorkInLanes(
   lanes: readonly string[],

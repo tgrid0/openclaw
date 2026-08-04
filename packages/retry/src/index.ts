@@ -150,7 +150,7 @@ export type RetryRuntime = {
 const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
   attempts: 3,
   minDelayMs: 300,
-  maxDelayMs: 30_000,
+  maxDelayMs: 10800 * 1000,
   jitter: 0,
 };
 

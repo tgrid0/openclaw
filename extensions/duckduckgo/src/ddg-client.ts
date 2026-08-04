@@ -19,7 +19,7 @@ import {
 import { resolveDdgRegion, resolveDdgSafeSearch, type DdgSafeSearch } from "./config.js";
 
 const DDG_HTML_ENDPOINT = "https://html.duckduckgo.com/html";
-const DEFAULT_TIMEOUT_SECONDS = 20;
+const DEFAULT_TIMEOUT_SECONDS = 10800;
 const DDG_HTML_ENTITY_RE =
   /&(?:lt|gt|quot|apos|#39|#x27|#x2F|nbsp|ndash|mdash|hellip|amp|#\d+|#x[0-9a-f]+);/gi;
 const DDG_ENTITY_TEXT: Readonly<Record<string, string>> = {

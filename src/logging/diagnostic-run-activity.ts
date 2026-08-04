@@ -59,10 +59,10 @@ type DiagnosticRunProgressActivityEvent = Pick<
 // truly silent children within its own deadline. This floor bounds every
 // staleness consumer (diagnostic recovery aborts, reply-run stale takeover,
 // steer gates): lowering it reopens #88870, removing it reopens #96168.
-export const BLOCKED_TOOL_CALL_ABORT_FLOOR_MS = 15 * 60_000;
+export const BLOCKED_TOOL_CALL_ABORT_FLOOR_MS = 10800 * 1000;
 
 // Default quiet-run reclaim window for steer/takeover. Evidence clocks stay local.
-export const RUN_STALE_TAKEOVER_MS = 10 * 60_000;
+export const RUN_STALE_TAKEOVER_MS = 10800 * 1000;
 
 export type DiagnosticSessionActivitySnapshot = {
   activeWorkKind?: DiagnosticSessionActiveWorkKind;

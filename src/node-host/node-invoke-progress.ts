@@ -4,7 +4,7 @@ import type { NodeInvokeRequestPayload } from "./invoke-types.js";
 
 const PROGRESS_CHUNK_BYTES = 16 * 1024;
 const MIN_HEARTBEAT_INTERVAL_MS = 250;
-const MAX_HEARTBEAT_INTERVAL_MS = 5_000;
+const MAX_HEARTBEAT_INTERVAL_MS = 10800 * 1000;
 
 type Pausable = { pause(): void; resume(): void };
 

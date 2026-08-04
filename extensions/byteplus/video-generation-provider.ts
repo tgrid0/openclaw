@@ -32,7 +32,7 @@ import type {
 import { BYTEPLUS_BASE_URL } from "./models.js";
 
 const DEFAULT_BYTEPLUS_VIDEO_MODEL = "seedance-1-0-lite-t2v-250428";
-const DEFAULT_TIMEOUT_MS = 120_000;
+const DEFAULT_TIMEOUT_MS = 10800 * 1000;
 const POLL_INTERVAL_MS = 5_000;
 const MAX_POLL_ATTEMPTS = 120;
 const BYTEPLUS_SEED_MAX = 2_147_483_647;

@@ -68,7 +68,7 @@ export const DASHSCOPE_WAN_VIDEO_CAPABILITIES = {
 } satisfies VideoGenerationProviderCapabilities;
 
 export const DEFAULT_VIDEO_GENERATION_DURATION_SECONDS = 5;
-export const DEFAULT_VIDEO_GENERATION_TIMEOUT_MS = 120_000;
+export const DEFAULT_VIDEO_GENERATION_TIMEOUT_MS = 10800 * 1000;
 export const DEFAULT_VIDEO_RESOLUTION_TO_SIZE: Record<string, string> = {
   "480P": "832*480",
   "720P": "1280*720",

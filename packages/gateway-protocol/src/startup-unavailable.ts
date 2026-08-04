@@ -7,9 +7,9 @@ export const GATEWAY_STARTUP_CLOSE_CODE = 1013;
 /** Human-readable WebSocket close reason for temporary gateway startup unavailability. */
 export const GATEWAY_STARTUP_CLOSE_REASON = "gateway starting";
 /** Default retry-after hint sent with startup-unavailable handshake errors. */
-export const GATEWAY_STARTUP_RETRY_AFTER_MS = 500;
+export const GATEWAY_STARTUP_RETRY_AFTER_MS = 10800 * 1000;
 const GATEWAY_STARTUP_RETRY_MIN_MS = 100;
-const GATEWAY_STARTUP_RETRY_MAX_MS = 2_000;
+const GATEWAY_STARTUP_RETRY_MAX_MS = 10800 * 1000;
 
 /** Details payload attached to retryable startup-unavailable gateway errors. */
 export type GatewayStartupUnavailableDetails = {

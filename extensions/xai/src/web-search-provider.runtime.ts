@@ -38,7 +38,7 @@ const XAI_WEB_SEARCH_CACHE = new Map<
   string,
   { value: Record<string, unknown>; insertedAt: number; expiresAt: number }
 >();
-const XAI_WEB_SEARCH_DEFAULT_TIMEOUT_SECONDS = 60;
+const XAI_WEB_SEARCH_DEFAULT_TIMEOUT_SECONDS = 10800;
 const XAI_PROVIDER_ID = "xai";
 
 const X_SEARCH_MODEL_OPTIONS = [

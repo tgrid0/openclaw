@@ -33,7 +33,7 @@ const XAI_VIDEO_15_MODEL_IDS = new Set([
   "grok-imagine-video-1.5-preview",
   "grok-imagine-video-1.5-2026-05-30",
 ]);
-const DEFAULT_TIMEOUT_MS = 600_000;
+const DEFAULT_TIMEOUT_MS = 10800 * 1000;
 const POLL_INTERVAL_MS = 5_000;
 const MAX_POLL_ATTEMPTS = 120;
 const XAI_VIDEO_ASPECT_RATIOS = new Set(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"]);

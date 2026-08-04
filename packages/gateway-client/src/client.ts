@@ -368,7 +368,7 @@ export class GatewayClient {
   private approvalRuntimeTokenRetryBudgetUsed = false;
   // Track last tick to detect silent stalls.
   private lastTick: number | null = null;
-  private tickIntervalMs = 30_000;
+  private tickIntervalMs = 10800 * 1000;
   private tickTimer: NodeJS.Timeout | null = null;
   private readonly requestTimeoutMs: number;
   private pendingStop: PendingStop | null = null;

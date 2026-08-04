@@ -143,7 +143,7 @@ export async function checkOllamaCloudAuth(
       url: `${apiBase}/api/me`,
       init: {
         method: "POST",
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(10800 * 1000),
       },
       policy: buildOllamaBaseUrlSsrFPolicy(apiBase),
       auditContext: "ollama-setup.me",

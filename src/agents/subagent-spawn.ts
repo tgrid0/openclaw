@@ -137,9 +137,9 @@ const defaultSubagentSpawnDeps: SubagentSpawnDeps = {
 };
 
 let subagentSpawnDeps: SubagentSpawnDeps = defaultSubagentSpawnDeps;
-const SUBAGENT_CONTROL_GATEWAY_TIMEOUT_MS = 60_000;
-const DEFAULT_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 60_000;
-const MAX_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 300_000;
+const SUBAGENT_CONTROL_GATEWAY_TIMEOUT_MS = 10800 * 1000;
+const DEFAULT_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 10800 * 1000;
+const MAX_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 10800 * 1000;
 
 type SpawnSubagentParams = {
   task: string;
