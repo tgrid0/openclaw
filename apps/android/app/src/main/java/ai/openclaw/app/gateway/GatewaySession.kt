@@ -1815,7 +1815,7 @@ class GatewaySession(
             command = payload.command,
             paramsJson = paramsJson,
             timeoutMs = payload.timeoutMs,
-            sessionKey = payload.sessionKey?.trim()?.takeIf { it.isNotEmpty() },
+            sessionKey = payload.sessionKey.asStringOrNull()?.trim()?.takeIf { it.isNotEmpty() },
             hasSessionKeyEnvelope = hasSessionKeyEnvelope,
           )
         val result = executeInvokeRequest(request, receivedAtMs)

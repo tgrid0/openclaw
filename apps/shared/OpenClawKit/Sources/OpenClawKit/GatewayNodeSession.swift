@@ -1,75 +1,6 @@
-import CryptoKit
 import Foundation
 import OpenClawProtocol
 import OSLog
-
-private struct NodeInvokeRequestPayload: Codable {
-    var id: String
-    var nodeId: String
-    var command: String
-    var paramsJSON: String?
-    var timeoutMs: Int?
-    var idempotencyKey: String?
-    var sessionKey: String?
-    var hasSessionKeyEnvelope: Bool
-
-    private enum CodingKeys: String, CodingKey {
-        case id
-        case nodeId
-        case command
-        case paramsJSON
-        case timeoutMs
-        case idempotencyKey
-        case sessionKey
-    }
-
-    init(
-        id: String,
-        nodeId: String,
-        command: String,
-        paramsJSON: String?,
-        timeoutMs: Int?,
-        idempotencyKey: String?,
-        sessionKey: String? = nil,
-        hasSessionKeyEnvelope: Bool = false)
-    {
-        self.id = id
-        self.nodeId = nodeId
-        self.command = command
-        self.paramsJSON = paramsJSON
-        self.timeoutMs = timeoutMs
-        self.idempotencyKey = idempotencyKey
-        self.sessionKey = sessionKey
-        self.hasSessionKeyEnvelope = hasSessionKeyEnvelope
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(String.self, forKey: .id)
-        self.nodeId = try container.decode(String.self, forKey: .nodeId)
-        self.command = try container.decode(String.self, forKey: .command)
-        self.paramsJSON = try container.decodeIfPresent(String.self, forKey: .paramsJSON)
-        self.timeoutMs = try container.decodeIfPresent(Int.self, forKey: .timeoutMs)
-        self.idempotencyKey = try container.decodeIfPresent(String.self, forKey: .idempotencyKey)
-        self.hasSessionKeyEnvelope = container.contains(.sessionKey)
-        let sessionKey = try container.decodeIfPresent(String.self, forKey: .sessionKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        self.sessionKey = sessionKey?.isEmpty == false ? sessionKey : nil
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.id, forKey: .id)
-        try container.encode(self.nodeId, forKey: .nodeId)
-        try container.encode(self.command, forKey: .command)
-        try container.encodeIfPresent(self.paramsJSON, forKey: .paramsJSON)
-        try container.encodeIfPresent(self.timeoutMs, forKey: .timeoutMs)
-        try container.encodeIfPresent(self.idempotencyKey, forKey: .idempotencyKey)
-        if self.hasSessionKeyEnvelope {
-            try container.encode(self.sessionKey, forKey: .sessionKey)
-        }
-    }
-}
 
 private struct NodeInvokeCancelPayload: Codable {
     var invokeId: String
@@ -141,49 +72,16 @@ public actor GatewayNodeSession {
     private static let nodeInvokeSessionKeyEnvelopeProtocolFeature =
         "node-invoke-session-key-envelope-v1"
 
-    private static let staleRouteInvokeMessage = "UNAVAILABLE: node route changed before dispatch"
-    private enum ComputerInvokeReceiptState {
-        case inFlight(Task<BridgeInvokeResponse, Never>)
-        case completed(BridgeInvokeResponse)
-
-        var isCompleted: Bool {
-            if case .completed = self {
-                return true
-            }
-            return false
-        }
-    }
-
-    private struct ComputerInvokeReceipt {
-        let id: UUID
-        let fingerprint: String
-        var state: ComputerInvokeReceiptState
-        var operationSettled: Bool
-    }
+    static let staleRouteInvokeMessage = "UNAVAILABLE: node route changed before dispatch"
 
     private struct ConnectOptionsKey: Equatable {
         let normalizedInputs: String
         let deviceAuthGatewayIDBytes: [UInt8]?
     }
 
-    private struct ComputerInvokeReceiptKey: Hashable {
-        let receiptScopeBytes: [UInt8]
-        let idempotencyKeyBytes: [UInt8]
-
-        init(receiptScope: String, idempotencyKey: String) {
-            self.receiptScopeBytes = Array(receiptScope.utf8)
-            self.idempotencyKeyBytes = Array(idempotencyKey.utf8)
-        }
-    }
-
     private struct ActiveInvoke {
         let admissionGeneration: UInt64
         let task: Task<BridgeInvokeResponse, Never>
-    }
-
-    private enum NodeInvokeSessionEnvelopeMode: Equatable, Sendable {
-        case authoritative
-        case legacy
     }
 
     private enum InvokeTimeoutBudget {
@@ -202,7 +100,7 @@ public actor GatewayNodeSession {
     private let encoder = JSONEncoder()
     static let defaultInvokeTimeoutMs = 30000
     static let maxInvokeTimeoutMs = Int(Int32.max)
-    private static let computerInvokeReceiptLimit = 256
+    static let computerInvokeReceiptLimit = 256
     private var channel: GatewayChannelActor?
     private var activeURL: URL?
     private var activeCredentials: GatewayNodeSessionCredentials?
@@ -240,10 +138,10 @@ public actor GatewayNodeSession {
     // in-flight/results on the long-lived node session so a channel reconnect can
     // replay the receipt without posting input twice. App restart intentionally
     // remains a wider durable-storage boundary.
-    private var computerInvokeReceipts: [ComputerInvokeReceiptKey: ComputerInvokeReceipt] = [:]
-    private var computerInvokeReceiptOrder: [ComputerInvokeReceiptKey] = []
+    var computerInvokeReceipts: [ComputerInvokeReceiptKey: ComputerInvokeReceipt] = [:]
+    var computerInvokeReceiptOrder: [ComputerInvokeReceiptKey] = []
     #if DEBUG
-    private var computerInvokeReceiptJoinCounts: [UUID: Int] = [:]
+    var computerInvokeReceiptJoinCounts: [UUID: Int] = [:]
     #endif
 
     private struct ServerEventSubscriber {
@@ -1368,19 +1266,20 @@ extension GatewayNodeSession {
                 channelGeneration: channelGeneration,
                 admissionGeneration: admissionGeneration,
                 socketGeneration: socketGeneration)
-            let receiptScope = self.computerInvokeReceiptScope()
+            let context = NodeInvokeRequestContext(
+                envelopeMode: mode,
+                route: route,
+                receiptScope: self.computerInvokeReceiptScope(),
+                channel: channel,
+                socketGeneration: socketGeneration,
+                receivedAt: receivedAt)
             // GatewayChannel waits for push handling before it rearms receive. Run device work
             // separately so a long invoke cannot starve heartbeats or later node requests.
             Task.detached { [weak self] in
                 await self?.handleInvokeRequest(
                     request: request,
-                    envelopeMode: mode,
                     onInvoke: onInvoke,
-                    route: route,
-                    receiptScope: receiptScope,
-                    channel: channel,
-                    socketGeneration: socketGeneration,
-                    receivedAt: receivedAt)
+                    context: context)
             }
         } catch {
             self.logger.error("node invoke decode failed: \(error.localizedDescription, privacy: .public)")
@@ -1389,21 +1288,16 @@ extension GatewayNodeSession {
 
     private func handleInvokeRequest(
         request: NodeInvokeRequestPayload,
-        envelopeMode: NodeInvokeSessionEnvelopeMode,
         onInvoke: @escaping @Sendable (BridgeInvokeRequest) async -> BridgeInvokeResponse,
-        route: GatewayNodeSessionRoute,
-        receiptScope: String,
-        channel: GatewayChannelActor,
-        socketGeneration: UInt64,
-        receivedAt: ContinuousClock.Instant) async
+        context: NodeInvokeRequestContext) async
     {
         var request = request
-        if envelopeMode == .authoritative, !request.hasSessionKeyEnvelope {
+        if context.envelopeMode == .authoritative, !request.hasSessionKeyEnvelope {
             request.hasSessionKeyEnvelope = true
             request.sessionKey = nil
         }
-        guard self.isCurrentRoute(route),
-              self.channel === channel
+        guard self.isCurrentRoute(context.route),
+              self.channel === context.channel
         else { return }
         // Lifecycle cleanup gates owner readiness. Reject while it is suspended instead of
         // holding the Gateway request until timeout; the replacement route stays fail-closed.
@@ -1417,8 +1311,8 @@ extension GatewayNodeSession {
                     error: OpenClawNodeError(
                         code: .unavailable,
                         message: "UNAVAILABLE: node lifecycle transition in progress")),
-                channel: channel,
-                socketGeneration: socketGeneration)
+                channel: context.channel,
+                socketGeneration: context.socketGeneration)
             return
         }
         self.logger.info("node invoke executing id=\(request.id, privacy: .public)")
@@ -1433,20 +1327,20 @@ extension GatewayNodeSession {
             }
             return await self.invokeIfCurrentRoute(
                 req,
-                expectedRoute: route,
+                expectedRoute: context.route,
                 onInvoke: onInvoke)
         }
         let sessionKeyEnvelope = Self.sessionKeyEnvelope(request: request)
         let timeoutMs: Int
-        switch Self.invokeTimeoutBudget(timeoutMs: request.timeoutMs, receivedAt: receivedAt) {
+        switch Self.invokeTimeoutBudget(timeoutMs: request.timeoutMs, receivedAt: context.receivedAt) {
         case .disabled:
             timeoutMs = 0
         case .expired:
             await self.sendInvokeResult(
                 request: request,
                 response: Self.invokeTimeoutResponse(requestId: request.id),
-                channel: channel,
-                socketGeneration: socketGeneration)
+                channel: context.channel,
+                socketGeneration: context.socketGeneration)
             return
         case let .remaining(remaining):
             timeoutMs = remaining
@@ -1456,21 +1350,21 @@ extension GatewayNodeSession {
                 requestPayload: request,
                 request: bridgeRequest,
                 timeoutMs: timeoutMs,
-                receiptScope: receiptScope,
+                receiptScope: context.receiptScope,
                 onInvoke: routeBoundInvoke)
         }
         // Invoke output belongs to the requesting channel. A target switch while the device
         // command is running must discard it instead of disclosing it to the replacement.
-        guard self.isCurrentRoute(route),
-              self.channel === channel
+        guard self.isCurrentRoute(context.route),
+              self.channel === context.channel
         else { return }
         self.logger.info(
             "node invoke completed id=\(request.id, privacy: .public) ok=\(response.ok, privacy: .public)")
         await self.sendInvokeResult(
             request: request,
             response: response,
-            channel: channel,
-            socketGeneration: socketGeneration)
+            channel: context.channel,
+            socketGeneration: context.socketGeneration)
     }
 
     func invokeIfCurrentRoute(
@@ -1650,159 +1544,6 @@ extension GatewayNodeSession {
         }
     }
 
-    private static func staleRouteInvokeResponse(requestId: String) -> BridgeInvokeResponse {
-        BridgeInvokeResponse(
-            id: requestId,
-            ok: false,
-            error: OpenClawNodeError(
-                code: .unavailable,
-                message: self.staleRouteInvokeMessage))
-    }
-
-    private func invokeWithComputerReceipt(
-        requestPayload: NodeInvokeRequestPayload,
-        request: BridgeInvokeRequest,
-        timeoutMs: Int?,
-        receiptScope: String,
-        onInvoke: @escaping @Sendable (BridgeInvokeRequest) async -> BridgeInvokeResponse,
-        retryStaleJoinedReceipt: Bool = true) async
-        -> BridgeInvokeResponse
-    {
-        let idempotencyKey = requestPayload.idempotencyKey?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard requestPayload.command == "computer.act", !idempotencyKey.isEmpty else {
-            return await Self.invokeWithTimeout(
-                request: request,
-                timeoutMs: timeoutMs,
-                onInvoke: onInvoke)
-        }
-
-        let receiptKey = ComputerInvokeReceiptKey(
-            receiptScope: receiptScope,
-            idempotencyKey: idempotencyKey)
-        let fingerprint = Self.computerInvokeFingerprint(requestPayload)
-        if let receipt = computerInvokeReceipts[receiptKey] {
-            guard receipt.fingerprint == fingerprint else {
-                return BridgeInvokeResponse(
-                    id: request.id,
-                    ok: false,
-                    error: OpenClawNodeError(
-                        code: .invalidRequest,
-                        message: "INVALID_REQUEST: computer.act idempotency key reused with different parameters"))
-            }
-            #if DEBUG
-            self.computerInvokeReceiptJoinCounts[receipt.id, default: 0] += 1
-            #endif
-            let response = switch receipt.state {
-            case let .inFlight(task): await task.value
-            case let .completed(response): response
-            }
-            self.discardRetryableComputerInvokeReceipt(
-                key: receiptKey,
-                receiptID: receipt.id,
-                fingerprint: fingerprint,
-                response: response)
-            if retryStaleJoinedReceipt, Self.isStaleRouteInvokeResponse(response) {
-                // A reconnect retry can join the old route's in-flight receipt.
-                // Once that receipt proves it never dispatched, retry exactly once
-                // with this request's route-bound invoke closure.
-                return await self.invokeWithComputerReceipt(
-                    requestPayload: requestPayload,
-                    request: request,
-                    timeoutMs: timeoutMs,
-                    receiptScope: receiptScope,
-                    onInvoke: onInvoke,
-                    retryStaleJoinedReceipt: false)
-            }
-            return Self.rebindInvokeResponse(response, requestId: request.id)
-        }
-
-        guard self.makeComputerInvokeReceiptCapacity() else {
-            return BridgeInvokeResponse(
-                id: request.id,
-                ok: false,
-                error: OpenClawNodeError(
-                    code: .unavailable,
-                    message: "UNAVAILABLE: computer.act receipt capacity exhausted"))
-        }
-
-        let receiptID = UUID()
-        let task = Task { [self] in
-            await Self.invokeWithTimeout(
-                request: request,
-                timeoutMs: timeoutMs,
-                onInvoke: onInvoke,
-                onOperationSettled: { [weak self] in
-                    await self?.markComputerInvokeOperationSettled(
-                        key: receiptKey,
-                        receiptID: receiptID,
-                        fingerprint: fingerprint)
-                })
-        }
-        self.computerInvokeReceipts[receiptKey] = ComputerInvokeReceipt(
-            id: receiptID,
-            fingerprint: fingerprint,
-            state: .inFlight(task),
-            operationSettled: false)
-        self.computerInvokeReceiptOrder.append(receiptKey)
-        let response = await task.value
-        if Self.isStaleRouteInvokeResponse(response) {
-            self.discardRetryableComputerInvokeReceipt(
-                key: receiptKey,
-                receiptID: receiptID,
-                fingerprint: fingerprint,
-                response: response)
-        } else if self.computerInvokeReceipts[receiptKey]?.id == receiptID,
-                  self.computerInvokeReceipts[receiptKey]?.fingerprint == fingerprint
-        {
-            self.computerInvokeReceipts[receiptKey]?.state = .completed(response)
-        }
-        return Self.rebindInvokeResponse(response, requestId: request.id)
-    }
-
-    #if DEBUG
-    // periphery:ignore - package tests exercise receipt dedupe around the private invoke path.
-    func invokeComputerWithReceiptForTesting(
-        requestId: String,
-        paramsJSON: String,
-        idempotencyKey: String,
-        receiptScope: String,
-        timeoutMs: Int = 0,
-        onInvoke: @escaping @Sendable (BridgeInvokeRequest) async -> BridgeInvokeResponse) async
-        -> BridgeInvokeResponse
-    {
-        let payload = NodeInvokeRequestPayload(
-            id: requestId,
-            nodeId: "test-node",
-            command: "computer.act",
-            paramsJSON: paramsJSON,
-            timeoutMs: timeoutMs,
-            idempotencyKey: idempotencyKey)
-        return await self.invokeWithComputerReceipt(
-            requestPayload: payload,
-            request: BridgeInvokeRequest(
-                id: requestId,
-                command: "computer.act",
-                paramsJSON: paramsJSON,
-                nodeId: "test-node"),
-            timeoutMs: timeoutMs,
-            receiptScope: receiptScope,
-            onInvoke: onInvoke)
-    }
-
-    // periphery:ignore - package tests assert receipt joining without exposing the receipt store.
-    func computerReceiptJoinCountForTesting(
-        idempotencyKey: String,
-        receiptScope: String) -> Int
-    {
-        let receiptKey = ComputerInvokeReceiptKey(
-            receiptScope: receiptScope,
-            idempotencyKey: idempotencyKey)
-        guard let receiptID = self.computerInvokeReceipts[receiptKey]?.id else { return 0 }
-        return self.computerInvokeReceiptJoinCounts[receiptID] ?? 0
-    }
-    #endif
-
     private func computerInvokeReceiptScope() -> String {
         if let gatewayID = self.connectOptions?.deviceAuthGatewayID,
            !gatewayID.isEmpty
@@ -1810,85 +1551,6 @@ extension GatewayNodeSession {
             return "gateway:\(gatewayID)"
         }
         return "url:\(self.activeURL?.absoluteString ?? "unknown")"
-    }
-
-    private static func computerInvokeFingerprint(_ request: NodeInvokeRequestPayload) -> String {
-        let sessionEnvelope = request.hasSessionKeyEnvelope
-            ? "authoritative:\(request.sessionKey ?? "")"
-            : "legacy"
-        let value = [
-            request.nodeId,
-            request.command,
-            request.paramsJSON ?? "",
-            sessionEnvelope,
-        ].joined(separator: "\u{0}")
-        return SHA256.hash(data: Data(value.utf8))
-            .map { String(format: "%02x", $0) }
-            .joined()
-    }
-
-    private static func rebindInvokeResponse(
-        _ response: BridgeInvokeResponse,
-        requestId: String) -> BridgeInvokeResponse
-    {
-        BridgeInvokeResponse(
-            type: response.type,
-            id: requestId,
-            ok: response.ok,
-            payload: response.payload,
-            payloadJSON: response.payloadJSON,
-            error: response.error)
-    }
-
-    private static func isStaleRouteInvokeResponse(_ response: BridgeInvokeResponse) -> Bool {
-        response.ok == false &&
-            response.error?.code == .unavailable &&
-            response.error?.message == self.staleRouteInvokeMessage
-    }
-
-    private func discardRetryableComputerInvokeReceipt(
-        key: ComputerInvokeReceiptKey,
-        receiptID: UUID,
-        fingerprint: String,
-        response: BridgeInvokeResponse)
-    {
-        guard Self.isStaleRouteInvokeResponse(response),
-              self.computerInvokeReceipts[key]?.id == receiptID,
-              self.computerInvokeReceipts[key]?.fingerprint == fingerprint
-        else { return }
-        self.computerInvokeReceipts.removeValue(forKey: key)
-        self.computerInvokeReceiptOrder.removeAll { $0 == key }
-        #if DEBUG
-        self.computerInvokeReceiptJoinCounts.removeValue(forKey: receiptID)
-        #endif
-    }
-
-    private func markComputerInvokeOperationSettled(
-        key: ComputerInvokeReceiptKey,
-        receiptID: UUID,
-        fingerprint: String)
-    {
-        guard self.computerInvokeReceipts[key]?.id == receiptID,
-              self.computerInvokeReceipts[key]?.fingerprint == fingerprint
-        else { return }
-        self.computerInvokeReceipts[key]?.operationSettled = true
-    }
-
-    private func makeComputerInvokeReceiptCapacity() -> Bool {
-        while self.computerInvokeReceipts.count >= Self.computerInvokeReceiptLimit {
-            guard let completedIndex = computerInvokeReceiptOrder.firstIndex(where: { key in
-                guard let receipt = self.computerInvokeReceipts[key] else { return false }
-                return receipt.state.isCompleted && receipt.operationSettled
-            }) else { return false }
-            let evictedKey = self.computerInvokeReceiptOrder.remove(at: completedIndex)
-            let evictedReceipt = self.computerInvokeReceipts.removeValue(forKey: evictedKey)
-            #if DEBUG
-            if let receiptID = evictedReceipt?.id {
-                self.computerInvokeReceiptJoinCounts.removeValue(forKey: receiptID)
-            }
-            #endif
-        }
-        return true
     }
 
     private func decodeInvokeRequest(from payload: OpenClawProtocol.AnyCodable) throws -> NodeInvokeRequestPayload {
