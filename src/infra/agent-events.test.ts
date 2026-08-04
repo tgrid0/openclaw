@@ -16,6 +16,7 @@ import {
   runOncePerAgentRun,
   withAgentRunLifecycleGeneration,
 } from "./agent-events.js";
+import { onAgentRunContextRetired } from "./agent-run-context-retirement.js";
 import {
   claimAgentRunContext,
   clearAgentRunContext,
@@ -27,7 +28,6 @@ import {
   retainQueuedAgentRunContext,
   sweepStaleRunContexts,
 } from "./agent-run-registry.js";
-import { onAgentRunContextRetired } from "./agent-run-context-retirement.js";
 import { emitAgentRunStatusEvent } from "./agent-run-status-events.js";
 import { recordAgentRunOutputTokens } from "./agent-run-usage.js";
 
