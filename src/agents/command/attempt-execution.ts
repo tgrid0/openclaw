@@ -50,8 +50,8 @@ import {
 } from "../../tasks/task-status-access.js";
 import { resolveUserPath } from "../../utils.js";
 import { resolveMessageChannel } from "../../utils/message-channel.js";
-import type { AgentRunTerminalReplySnapshot } from "../agent-run-terminal-reply.js";
 import type { AgentExecutionAttribution } from "../agent-execution-attribution.js";
+import type { AgentRunTerminalReplySnapshot } from "../agent-run-terminal-reply.js";
 import { resolveAuthProfileOrder } from "../auth-profiles/order.js";
 import { ensureAuthProfileStore } from "../auth-profiles/store.js";
 import {
