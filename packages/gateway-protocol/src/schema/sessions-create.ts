@@ -64,6 +64,12 @@ export const SessionsCreateParamsSchema = closedObject({
       description: "Managed worktree name; becomes branch openclaw/<name>. Requires worktree=true.",
     }),
   ),
+  adoptCwd: Type.Optional(
+    Type.Boolean({
+      description:
+        "Adopt the given cwd as the session working directory without provisioning a managed worktree. Requires cwd; mutually exclusive with worktree and execNode.",
+    }),
+  ),
   execNode: Type.Optional(
     Type.String({
       minLength: 1,

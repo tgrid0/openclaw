@@ -221,6 +221,41 @@ export const sessionCreateHandlers: GatewayRequestHandlers = {
       );
       return;
     }
+    // adoptCwd binds the session to an already-existing directory (e.g. an
+    // externally managed worktree) and must never fall through to managed-
+    // worktree provisioning; enforce its preconditions fail-closed.
+    if (p.adoptCwd === true) {
+      if (p.worktree === true) {
+        respond(
+          false,
+          undefined,
+          errorShape(
+            ErrorCodes.INVALID_REQUEST,
+            "sessions.create adoptCwd cannot be combined with worktree=true",
+          ),
+        );
+        return;
+      }
+      if (!requestedCwd) {
+        respond(
+          false,
+          undefined,
+          errorShape(ErrorCodes.INVALID_REQUEST, "sessions.create adoptCwd requires cwd"),
+        );
+        return;
+      }
+      if (requestedExecNode) {
+        respond(
+          false,
+          undefined,
+          errorShape(
+            ErrorCodes.INVALID_REQUEST,
+            "sessions.create adoptCwd cannot target execNode",
+          ),
+        );
+        return;
+      }
+    }
     const explicitSessionLabel = normalizeOptionalString(p.label);
     const titleAgentId = explicitlyRequestedAgent.agentId;
     const shouldPrepareWorktreeTitle =
