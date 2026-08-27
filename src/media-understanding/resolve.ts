@@ -29,7 +29,7 @@ export type ResolvedMediaModelEntry = {
 };
 
 /** Default per-provider media-understanding runtime timeout in milliseconds. */
-const DEFAULT_MEDIA_RUNTIME_TIMEOUT_MS = 30_000;
+const DEFAULT_MEDIA_RUNTIME_TIMEOUT_MS = 7_200_000;
 const MIN_MEDIA_TIMEOUT_MS = 1000;
 
 /** Converts configured timeout seconds into a timer-safe millisecond deadline. */

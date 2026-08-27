@@ -31,7 +31,7 @@ export type SystemAgentApprovalClassifier = (params: {
   verifiedInference: SystemAgentVerifiedInferenceBinding;
 }) => Promise<SystemAgentApprovalIntent>;
 
-const APPROVAL_INTENT_TIMEOUT_MS = 10_000;
+const APPROVAL_INTENT_TIMEOUT_MS = 7_200_000;
 const APPROVAL_INTENT_MAX_TOKENS = 8;
 
 const APPROVAL_INTENT_SYSTEM_PROMPT = [
