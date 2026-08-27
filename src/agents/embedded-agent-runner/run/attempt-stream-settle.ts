@@ -208,7 +208,7 @@ export async function settleEmbeddedAttemptStream(input: {
   const wasCompactingAfter = activeSession.isCompacting;
   const preCompactionSnapshot = wasCompactingBefore || wasCompactingAfter ? null : snapshot;
   const preCompactionSessionId = activeSession.sessionId;
-  const aggregateTimeoutMs = 60_000;
+  const aggregateTimeoutMs = 7_200_000;
 
   try {
     if (input.onBlockReplyFlush) {

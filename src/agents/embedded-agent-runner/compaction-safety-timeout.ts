@@ -7,7 +7,7 @@ import type { CompactResult, ContextEngine } from "../../context-engine/types.js
 import { createAbortError } from "../../infra/abort-signal.js";
 import { runAbortableTimeout } from "../../node-host/with-timeout.js";
 
-const EMBEDDED_COMPACTION_TIMEOUT_MS = 180_000;
+const EMBEDDED_COMPACTION_TIMEOUT_MS = 7_200_000;
 
 function abortErrorFromSignal(signal: AbortSignal): Error {
   const reason = "reason" in signal ? signal.reason : undefined;

@@ -9,7 +9,7 @@ import { defaultRuntime } from "../../../runtime.js";
 import { isFailoverError } from "../../failover-error.js";
 import type { SubagentAnnounceDeliveryResult } from "./subagent-announce-dispatch.js";
 
-const DEFAULT_SUBAGENT_ANNOUNCE_TIMEOUT_MS = 120_000;
+const DEFAULT_SUBAGENT_ANNOUNCE_TIMEOUT_MS = 7_200_000;
 
 export class SourceOwnerChangedError extends Error {
   constructor() {

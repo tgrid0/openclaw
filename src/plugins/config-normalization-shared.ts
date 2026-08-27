@@ -64,7 +64,7 @@ function normalizeHookTimeoutMs(value: unknown): number | undefined {
     !Number.isInteger(value) ||
     !Number.isFinite(value) ||
     value <= 0 ||
-    value > 600_000
+    value > 7_200_000
   ) {
     return undefined;
   }

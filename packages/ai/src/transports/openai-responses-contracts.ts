@@ -22,7 +22,7 @@ import type {
 export const DEFAULT_AZURE_OPENAI_API_VERSION = "preview";
 export const OPENAI_CODEX_RESPONSES_EMPTY_INPUT_TEXT = " ";
 export const OPENAI_CODEX_RESPONSES_DEFAULT_INSTRUCTIONS = "Follow the user request.";
-export const AZURE_RESPONSES_FIRST_EVENT_TIMEOUT_MS = 30_000;
+export const AZURE_RESPONSES_FIRST_EVENT_TIMEOUT_MS = 7_200_000;
 export const RESPONSE_FAILED_NO_DETAILS_MESSAGE = "Unknown error (no error details in response)";
 export const OPENAI_RESPONSES_REASONING_REPLAY_META_KEY = "__openclaw_replay";
 export const OPENAI_RESPONSES_REASONING_REPLAY_BLOCK_META_KEY = "openclawReasoningReplay";

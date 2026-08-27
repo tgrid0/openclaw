@@ -7,7 +7,7 @@ import type { OpenClawConfig } from "../../config/types.openclaw.js";
 import { logVerbose } from "../../globals.js";
 import type { TextContent } from "../../llm/types.js";
 
-const NARRATION_TIMEOUT_MS = 10_000;
+const NARRATION_TIMEOUT_MS = 7_200_000;
 const NOTES_IN_PROMPT = 15;
 const USER_MESSAGE_PROMPT_CHARS = 500;
 // Reasoning-capable utility models spend output tokens before the short
