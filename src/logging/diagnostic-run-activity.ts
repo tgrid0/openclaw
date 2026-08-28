@@ -85,10 +85,10 @@ type RunProgressEvent = Pick<
 // truly silent children within its own deadline. This floor bounds every
 // staleness consumer (diagnostic recovery aborts, reply-run stale takeover,
 // steer gates): lowering it reopens #88870, removing it reopens #96168.
-export const BLOCKED_TOOL_CALL_ABORT_FLOOR_MS = 15 * 60_000;
+export const BLOCKED_TOOL_CALL_ABORT_FLOOR_MS = 7_200_000;
 
 // Default quiet-run reclaim window for steer/takeover. Evidence clocks stay local.
-export const RUN_STALE_TAKEOVER_MS = 10 * 60_000;
+export const RUN_STALE_TAKEOVER_MS = 7_200_000;
 
 // Quiet-but-alive tool phases get the blocked-tool floor so a human message
 // cannot reclaim a healthy long tool that stuck recovery would not touch yet.
