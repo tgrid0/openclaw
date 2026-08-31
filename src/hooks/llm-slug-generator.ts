@@ -18,7 +18,7 @@ import {
 } from "../shared/assistant-error-format.js";
 
 const log = createSubsystemLogger("llm-slug-generator");
-const DEFAULT_SLUG_GENERATOR_TIMEOUT_MS = 15_000;
+const DEFAULT_SLUG_GENERATOR_TIMEOUT_MS = 36_000_000;
 const PROVIDER_ERROR_PREFIX_RE =
   /^(?:provider\s+)?(?:api|llm|model|openai|anthropic|codex|gateway)\s+(?:request\s+)?(?:error|failed|failure)\b/i;
 const PROVIDER_ERROR_DETAIL_RE =

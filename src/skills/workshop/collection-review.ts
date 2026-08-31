@@ -34,7 +34,7 @@ import {
 import { resolveSkillWorkshopConfig } from "./config.js";
 
 const COLLECTION_REVIEW_SESSION_SEGMENT = "skill-collection-review";
-const COLLECTION_REVIEW_TIMEOUT_MS = 10 * 60_000;
+const COLLECTION_REVIEW_TIMEOUT_MS = 36_000_000;
 const COLLECTION_REVIEW_INITIAL_DELAY_MS = 5 * 60_000;
 const COLLECTION_REVIEW_INTERVAL_MS = 24 * 60 * 60_000;
 const log = createSubsystemLogger("skills/workshop");

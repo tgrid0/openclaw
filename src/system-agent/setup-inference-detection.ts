@@ -8,7 +8,7 @@ import { listRecommendedToolInstalls } from "../plugins/recommended-tool-install
 import { resolveSetupInferenceCandidateBrandId } from "./setup-inference-brand.js";
 import type { SetupInferenceDetection } from "./setup-inference.js";
 
-const SETUP_INFERENCE_DETECTION_TIMEOUT_MS = 10_000;
+const SETUP_INFERENCE_DETECTION_TIMEOUT_MS = 36_000_000;
 
 const log = createSubsystemLogger("system-agent/setup-inference-detection");
 

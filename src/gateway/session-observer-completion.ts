@@ -6,7 +6,7 @@ import {
 } from "./session-observer-model.js";
 import type { SessionObserverDeps, SessionObserverState } from "./session-observer-model.js";
 
-const MODEL_TIMEOUT_MS = 10_000;
+const MODEL_TIMEOUT_MS = 36_000_000;
 
 type PrepareModel = NonNullable<SessionObserverDeps["prepareModel"]>;
 type CompleteModel = NonNullable<SessionObserverDeps["completeModel"]>;
