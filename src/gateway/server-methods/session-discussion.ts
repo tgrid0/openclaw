@@ -17,7 +17,7 @@ import { loadAccessorSessionEntryForGatewayTarget } from "./sessions-shared.js";
 import type { GatewayRequestContext, GatewayRequestHandlers } from "./types.js";
 import { assertValidParams } from "./validation.js";
 
-const DISCUSSION_TITLE_TIMEOUT_MS = 10_000;
+const DISCUSSION_TITLE_TIMEOUT_MS = 36_000_000;
 
 async function maybeGenerateTitleBeforeDiscussionOpen(params: {
   context: GatewayRequestContext;

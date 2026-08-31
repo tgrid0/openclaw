@@ -15,7 +15,7 @@ import { formatSystemAgentStartupMessage, type SystemAgentOverview } from "./ove
 
 const SYSTEM_AGENT_GREETING_SCOPE = "system-agent-greeting";
 const SYSTEM_AGENT_GREETING_KEY = "latest";
-const SYSTEM_AGENT_GREETING_TIMEOUT_MS = 20_000;
+const SYSTEM_AGENT_GREETING_TIMEOUT_MS = 36_000_000;
 const SYSTEM_AGENT_GREETING_FAILURE_RETRY_MS = 60_000;
 const SYSTEM_AGENT_GREETING_MAX_CHARS = 700;
 const SYSTEM_AGENT_GREETING_MAX_LINES = 5;

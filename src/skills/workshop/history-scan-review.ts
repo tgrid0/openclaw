@@ -16,7 +16,7 @@ import {
 import type { SkillWorkshopProposalReviewProgress } from "./types.js";
 
 export const HISTORY_SCAN_SESSION_SEGMENT = "skill-workshop-history-scan";
-const HISTORY_SCAN_TIMEOUT_MS = 10 * 60_000;
+const HISTORY_SCAN_TIMEOUT_MS = 36_000_000;
 
 export async function runSkillHistoryScanReview(params: {
   agentId: string;

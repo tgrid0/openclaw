@@ -33,7 +33,7 @@ import { resolveSkillWorkshopConfig } from "./config.js";
 import { readSkillUsageByFile } from "./curator.js";
 
 const COLLECTION_REVIEW_SESSION_SEGMENT = "skill-collection-review";
-const COLLECTION_REVIEW_TIMEOUT_MS = 10 * 60_000;
+const COLLECTION_REVIEW_TIMEOUT_MS = 36_000_000;
 
 async function runSkillCollectionReview(params: {
   agentId: string;
