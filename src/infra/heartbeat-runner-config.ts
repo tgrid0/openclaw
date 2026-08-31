@@ -31,7 +31,7 @@ export { resolveHeartbeatSchedulerSeed } from "./heartbeat-schedule.js";
 
 export const heartbeatLog = createSubsystemLogger("gateway/heartbeat");
 
-const DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 7200;
+const DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 36000;
 
 export function resolveHeartbeatChannelPlugin(channel: string): ChannelPlugin | undefined {
   const activePlugin = getActivePluginChannelRegistry()?.channels.find(

@@ -29,7 +29,7 @@ import {
   type AgentExecRunResult,
 } from "./agent-exec-result.js";
 
-const AGENT_EXEC_DEFAULT_TIMEOUT_SECONDS = 7200;
+const AGENT_EXEC_DEFAULT_TIMEOUT_SECONDS = 36000;
 
 type AgentExecCommandResult = {
   envelope: AgentExecEnvelope;

@@ -311,7 +311,7 @@ export type AgentDefaultsConfig = {
     accountId?: string;
     /** Override the heartbeat prompt body. The default treats scratch as monitor prose and directs recurring work to cron jobs. */
     prompt?: string;
-    /** Run timeout in seconds for heartbeat agent turns. Unset uses global timeout or heartbeat cadence capped at 7200 seconds. */
+    /** Run timeout in seconds for heartbeat agent turns. Unset uses global timeout or heartbeat cadence capped at 36000 seconds. */
     timeoutSeconds?: number;
     /**
      * If true, run heartbeat turns with lightweight bootstrap context.
@@ -414,7 +414,7 @@ export type AgentCompactionConfig = {
    * When set, compaction uses this model instead of the agent's primary model.
    * Falls back to the primary model when unset. */
   model?: string;
-  /** Safety window in seconds for each built-in compaction model request (default: 7200). */
+  /** Safety window in seconds for each built-in compaction model request (default: 36000). */
   timeoutSeconds?: number;
   /**
    * Id of a registered compaction provider plugin.

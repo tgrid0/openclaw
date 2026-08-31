@@ -17,7 +17,7 @@ const DEFAULT_SWARM_CONFIG: ResolvedSwarmConfig = {
   maxConcurrent: 8,
   maxChildrenPerGroup: 50,
   maxTotalPerGroup: 200,
-  waitTimeoutSecondsMax: 7200,
+  waitTimeoutSecondsMax: 36000,
   defaultAgentId: "",
 };
 

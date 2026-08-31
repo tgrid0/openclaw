@@ -68,7 +68,7 @@ const subagentRegistryBootstrapState: {
 
 const resumeRetryTimers = new Set<ReturnType<typeof setTimeout>>();
 let activeGatewayContextResolver: GatewayContextResolver | undefined;
-const SUBAGENT_ANNOUNCE_TIMEOUT_MS = 7_200_000;
+const SUBAGENT_ANNOUNCE_TIMEOUT_MS = 36_000_000;
 const GATEWAY_ADMISSION_RETRY_DELAY_MS = 1_000;
 /** Admission pressure for recoverable completion deliveries; rows are never pruned for capacity. */
 export function getSubagentDeliveryBacklogPressure(): {
