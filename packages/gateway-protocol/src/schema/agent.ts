@@ -202,7 +202,7 @@ export const ConversationTurnParamsSchema = closedObject({
   turnId: NonEmptyString,
   conversationRef: Type.String({ pattern: CONVERSATION_REF_PATTERN }),
   message: NonEmptyString,
-  timeoutMs: Type.Integer({ minimum: 1, maximum: 300_000 }),
+  timeoutMs: Type.Integer({ minimum: 1, maximum: 36_000_000 }),
 });
 
 export const ConversationTurnCancelParamsSchema = closedObject({

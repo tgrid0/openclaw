@@ -135,10 +135,10 @@ type SkillProposalDraftCliOptions = {
 };
 
 const GATEWAY_SKILLS_STATUS_TIMEOUT_MS = 1_500;
-const GATEWAY_SKILLS_EVALUATION_TIMEOUT_MS = 650_000;
+const GATEWAY_SKILLS_EVALUATION_TIMEOUT_MS = 36_050_000;
 const GATEWAY_SKILLS_OFFLINE_LOCK_TIMEOUT_MS = 250;
 // Apply can await evaluator, proposal-change, and skill-change hook phases.
-const GATEWAY_SKILLS_APPLY_TIMEOUT_MS = 1_850_000;
+const GATEWAY_SKILLS_APPLY_TIMEOUT_MS = 36_050_000;
 
 function resolveSkillsWorkspace(options?: ResolveSkillsWorkspaceOptions): {
   config: ReturnType<typeof getRuntimeConfig>;

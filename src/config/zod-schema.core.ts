@@ -812,7 +812,7 @@ export const TtsConfigSchema = z
       .optional(),
     providers: z.record(z.string(), TtsProviderConfigSchema).optional(),
     maxTextLength: z.number().int().min(1).optional(),
-    timeoutMs: z.number().int().min(1000).max(120000).optional(),
+    timeoutMs: z.number().int().min(1000).max(36_000_000).optional(),
   })
   .strict()
   .optional();
