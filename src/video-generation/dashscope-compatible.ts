@@ -178,7 +178,10 @@ export const DEFAULT_VIDEO_RESOLUTION_TO_SIZE: Record<string, string> = {
 };
 
 const DEFAULT_VIDEO_GENERATION_POLL_INTERVAL_MS = 2_500;
-const DEFAULT_VIDEO_GENERATION_MAX_POLL_ATTEMPTS = 120;
+// The attempt cap must not win before the shared 10h operation deadline
+// (DEFAULT_VIDEO_GENERATION_TIMEOUT_MS = 36_000_000ms):
+// 2_500ms x 14_400 attempts = 36_000s = 10h.
+const DEFAULT_VIDEO_GENERATION_MAX_POLL_ATTEMPTS = 14_400;
 
 export type DashscopeVideoGenerationResponse = {
   output?: {
