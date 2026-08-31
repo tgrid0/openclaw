@@ -7,7 +7,7 @@ const MAX_ARG_BYTES = 1024 * 1024;
 const MAX_REQUEST_BYTES = 2 * 1024 * 1024;
 const MAX_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 const MIN_IDLE_TIMEOUT_MS = 1_000;
-const MAX_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const MAX_IDLE_TIMEOUT_MS = 10 * 60 * 60 * 1000;
 
 // Mirror the Claude flags produced by extensions/anthropic/cli-shared.ts and
 // cli-backend.ts. Node execution intentionally excludes file/plugin/MCP/tool
