@@ -206,7 +206,7 @@ describe("runSystemAgentTurn", () => {
         authProfileIdSource: "user",
         config: binding.execution.runConfig,
         thinkLevel: "off",
-        timeoutMs: 120_000,
+        timeoutMs: 36_000_000,
       }),
     );
 

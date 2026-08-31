@@ -167,7 +167,7 @@ describe("system agent greeting cache", () => {
     expect(result.source).toBe("model");
     expect(planner).toHaveBeenCalledOnce();
     expect(planner).toHaveBeenCalledWith(
-      expect.objectContaining({ overview, facts, timeoutMs: 20_000 }),
+      expect.objectContaining({ overview, facts, timeoutMs: 36_000_000 }),
     );
     acknowledgeSystemAgentGreetingDelivery({
       auditSequence: facts.auditSequence,

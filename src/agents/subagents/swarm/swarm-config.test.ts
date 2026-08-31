@@ -8,7 +8,7 @@ describe("resolveSwarmConfig", () => {
       maxConcurrent: 8,
       maxChildrenPerGroup: 50,
       maxTotalPerGroup: 200,
-      waitTimeoutSecondsMax: 600,
+      waitTimeoutSecondsMax: 36000,
       defaultAgentId: "",
     });
   });

@@ -8,7 +8,7 @@ import {
   shouldKeepSubagentRunChildLink,
 } from "./subagent-run-liveness.js";
 
-const STALE_UNENDED_SUBAGENT_RUN_MS = 2 * 60 * 60 * 1_000;
+const STALE_UNENDED_SUBAGENT_RUN_MS = 10 * 60 * 60 * 1_000;
 
 describe("subagent run liveness", () => {
   const now = Date.parse("2026-04-25T12:00:00Z");
@@ -53,7 +53,7 @@ describe("subagent run liveness", () => {
   it("extends stale cutoff for explicit long run timeouts", () => {
     const entry = {
       createdAt: now - STALE_UNENDED_SUBAGENT_RUN_MS - 1,
-      runTimeoutSeconds: 6 * 60 * 60,
+      runTimeoutSeconds: 11 * 60 * 60,
       execution: {},
     };
     expect(isStaleUnendedSubagentRun(entry, now)).toBe(false);

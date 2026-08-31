@@ -45,7 +45,7 @@ describe("generateSlugViaLLM", () => {
 
     expect(runEmbeddedAgentMock).toHaveBeenCalledOnce();
     const options = requireFirstRunOptions();
-    expect(options.timeoutMs).toBe(15_000);
+    expect(options.timeoutMs).toBe(36_000_000);
     expect(options.cleanupBundleMcpOnRunEnd).toBe(true);
   });
 

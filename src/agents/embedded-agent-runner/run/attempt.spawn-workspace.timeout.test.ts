@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   // Hoisted because attempt-http-runtime imports Undici wiring at module load.
-  DEFAULT_UNDICI_STREAM_TIMEOUT_MS: 30 * 60 * 1000,
+  DEFAULT_UNDICI_STREAM_TIMEOUT_MS: 10 * 60 * 60 * 1000,
   ensureGlobalUndiciDispatcherStreamTimeouts: vi.fn(),
   ensureGlobalUndiciEnvProxyDispatcher: vi.fn(),
 }));

@@ -1310,7 +1310,7 @@ describe("deliverSubagentAnnouncement active requester steering", () => {
         steeringMode: "all",
         debounceMs: 500,
         waitForTranscriptCommit: true,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
       },
     );
     expect(queueEmbeddedAgentMessageWithOutcome).toHaveBeenNthCalledWith(
@@ -1320,7 +1320,7 @@ describe("deliverSubagentAnnouncement active requester steering", () => {
       {
         steeringMode: "all",
         debounceMs: 500,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
       },
     );
   });
@@ -1330,7 +1330,7 @@ describe("deliverSubagentAnnouncement active requester steering", () => {
       name: "waits through compaction and re-steers the active requester (86566)",
       outcomes: ["compacting", true],
       announceTimeoutMs: undefined,
-      retryWindowMs: 120_000,
+      retryWindowMs: 36_000_000,
     },
     {
       name: "keeps retrying compaction past the backoff schedule until the delivery timeout (86566)",
@@ -1580,7 +1580,7 @@ describe("deliverSubagentAnnouncement completion delivery", () => {
         steeringMode: "all",
         debounceMs: 500,
         waitForTranscriptCommit: true,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
         userTurnTranscriptRecorder: expect.any(Object),
       }),
     );
@@ -2916,7 +2916,7 @@ describe("deliverSubagentAnnouncement completion delivery", () => {
       "child done",
       expect.objectContaining({
         debounceMs: 500,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
         steeringMode: "all",
         waitForTranscriptCommit: true,
         userTurnTranscriptRecorder: expect.any(Object),
@@ -2928,7 +2928,7 @@ describe("deliverSubagentAnnouncement completion delivery", () => {
       "child done",
       expect.objectContaining({
         debounceMs: 500,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
         steeringMode: "all",
         userTurnTranscriptRecorder: expect.any(Object),
       }),

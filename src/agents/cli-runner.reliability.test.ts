@@ -4684,7 +4684,7 @@ describe("resolveCliNoOutputTimeoutMs", () => {
       useResume: true,
       trigger: "cron",
     });
-    expect(timeoutMs).toBe(480_000);
+    expect(timeoutMs).toBe(599_000);
   });
 
   it("lets explicit embedded run timeouts lift the default resume no-output ceiling", () => {
@@ -4695,7 +4695,7 @@ describe("resolveCliNoOutputTimeoutMs", () => {
       useResume: true,
       trigger: "user",
     });
-    expect(timeoutMs).toBe(480_000);
+    expect(timeoutMs).toBe(599_000);
   });
 
   it("keeps inherited user resume timeouts on the default resume no-output ceiling", () => {
@@ -4705,7 +4705,7 @@ describe("resolveCliNoOutputTimeoutMs", () => {
       useResume: true,
       trigger: "user",
     });
-    expect(timeoutMs).toBe(180_000);
+    expect(timeoutMs).toBe(599_000);
   });
 
   it("preserves explicit backend watchdog tuning for resumed cron runs", () => {
