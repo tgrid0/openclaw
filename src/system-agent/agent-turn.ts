@@ -34,7 +34,7 @@ import {
 // Flat budget for both route classes: agent-loop turns run multi-step tool
 // calls, so even metered external routes need the full window, and 120s
 // already covers local startup + generation (planner evidence).
-const AGENT_TURN_TIMEOUT_MS = 120_000;
+const AGENT_TURN_TIMEOUT_MS = 36_000_000;
 const SYSTEM_AGENT_TOOL_NAME = "openclaw";
 
 export type SystemAgentTurnDirective =
