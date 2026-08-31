@@ -458,7 +458,7 @@ function parseTimeoutSeconds(opts: { cfg: OpenClawConfig; timeout?: string }) {
       : (opts.cfg.agents?.defaults?.timeoutSeconds ?? 36000);
   if (raw === undefined) {
     throw new Error(
-      `Invalid --timeout. Use seconds as a non-negative integer, for example --timeout 600. Use --timeout 0 to disable the timeout.`,
+      `Invalid --timeout. Use seconds as a non-negative integer, for example --timeout 36000. Use --timeout 0 to disable the timeout.`,
     );
   }
   return raw;

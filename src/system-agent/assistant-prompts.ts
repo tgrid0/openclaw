@@ -13,7 +13,7 @@ import type { SystemAgentOverview } from "./overview.js";
  */
 /** Timeout for one assistant turn on an external, potentially metered route. */
 export const SYSTEM_AGENT_ASSISTANT_TIMEOUT_MS = 36_000_000;
-/** Local startup stages can consume nearly 30s before dispatch; leave inference a real budget. */
+/** Local route shares the 10h budget with the external route above: startup stages plus inference both fit one whole-turn bound. */
 export const SYSTEM_AGENT_ASSISTANT_LOCAL_TIMEOUT_MS = 36_000_000;
 
 const SYSTEM_AGENT_UI_CONTEXT_GUIDANCE =

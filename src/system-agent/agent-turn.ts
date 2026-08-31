@@ -32,8 +32,8 @@ import {
  * multi-turn memory. Inference setup must succeed before this runner is entered.
  */
 // Flat budget for both route classes: agent-loop turns run multi-step tool
-// calls, so even metered external routes need the full window, and 120s
-// already covers local startup + generation (planner evidence).
+// calls, so even metered external routes need the full 10h window (36_000_000ms),
+// which likewise leaves local startup + generation well inside the bound.
 const AGENT_TURN_TIMEOUT_MS = 36_000_000;
 const SYSTEM_AGENT_TOOL_NAME = "openclaw";
 
