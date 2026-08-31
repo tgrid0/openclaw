@@ -74,7 +74,7 @@ export function registerAgentTurnCommand(
     .option("--json", "Output result as JSON", false)
     .option(
       "--timeout <seconds>",
-      "Override agent command timeout (seconds, default 600 or config value)",
+      "Override agent command timeout (seconds, default 36000 or config value)",
     )
     .addHelpText(
       "after",
@@ -150,7 +150,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/age
     )
     .option("--auth-env-only", "Use provider credentials from environment variables only", false)
     .option("--no-auth-env-only", "Allow stored and external CLI credential discovery")
-    .option("--timeout <seconds>", "Agent deadline in seconds", "600")
+    .option("--timeout <seconds>", "Agent deadline in seconds", "36000")
     .option("--json", "Emit the stable agent-exec JSON envelope", false)
     .addHelpText(
       "after",

@@ -217,7 +217,7 @@ describe("agent command registration", () => {
         // the rest of the CLI; --auth-env-only is the opt-in restriction.
         authEnvOnly: false,
         isolated: false,
-        timeout: "600",
+        timeout: "36000",
         json: true,
       }),
       runtime,

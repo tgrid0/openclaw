@@ -4629,7 +4629,7 @@ describe("resolveCliNoOutputTimeoutMs", () => {
     ).toBe(600_000);
   });
 
-  it("lets explicit cron timeouts lift the default resume no-output ceiling", () => {
+  it("lets explicit cron timeouts (600s) drive the resume no-output timeout", () => {
     const timeoutMs = resolveCliNoOutputTimeoutMs({
       backend: { command: "codex" },
       timeoutMs: 600_000,
@@ -4639,7 +4639,7 @@ describe("resolveCliNoOutputTimeoutMs", () => {
     expect(timeoutMs).toBe(599_000);
   });
 
-  it("lets explicit embedded run timeouts lift the default resume no-output ceiling", () => {
+  it("lets explicit embedded run timeouts (600s) drive the resume no-output timeout", () => {
     const timeoutMs = resolveCliNoOutputTimeoutMs({
       backend: { command: "codex" },
       timeoutMs: 600_000,
@@ -4650,7 +4650,7 @@ describe("resolveCliNoOutputTimeoutMs", () => {
     expect(timeoutMs).toBe(599_000);
   });
 
-  it("keeps inherited user resume timeouts on the default resume no-output ceiling", () => {
+  it("keeps inherited user resume timeouts on the 600s run-budget no-output ceiling", () => {
     const timeoutMs = resolveCliNoOutputTimeoutMs({
       backend: { command: "codex" },
       timeoutMs: 600_000,
