@@ -144,8 +144,8 @@ export const PluginEntrySchema = z.strictObject({
     .strictObject({
       allowPromptInjection: z.boolean().optional(),
       allowConversationAccess: z.boolean().optional(),
-      timeoutMs: z.number().int().positive().max(7_200_000).optional(),
-      timeouts: z.record(z.string(), z.number().int().positive().max(7_200_000)).optional(),
+      timeoutMs: z.number().int().positive().max(36_000_000).optional(),
+      timeouts: z.record(z.string(), z.number().int().positive().max(36_000_000)).optional(),
     })
     .optional(),
   subagent: z

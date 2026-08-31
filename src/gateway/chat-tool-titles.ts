@@ -42,7 +42,7 @@ const TOOL_TITLE_MAX_CHARS = 72;
 // Reasoning models spend output tokens before the visible JSON; a small cap
 // can starve a whole batch of titles.
 const TOOL_TITLES_MAX_TOKENS = 4_096;
-const TOOL_TITLES_TIMEOUT_MS = 7_200_000;
+const TOOL_TITLES_TIMEOUT_MS = 36_000_000;
 
 const TOOL_TITLES_SYSTEM_PROMPT = [
   "You label tool calls in a coding agent's activity feed.",

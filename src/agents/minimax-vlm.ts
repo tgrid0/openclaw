@@ -20,7 +20,7 @@ type MinimaxBaseResp = {
 
 const MINIMAX_VLM_ERROR_BODY_MAX_BYTES = 8 * 1024;
 const MINIMAX_VLM_ERROR_BODY_MAX_CHARS = 400;
-const DEFAULT_MINIMAX_VLM_TIMEOUT_MS = 7_200_000;
+const DEFAULT_MINIMAX_VLM_TIMEOUT_MS = 36_000_000;
 
 export function isMinimaxVlmProvider(provider: string): boolean {
   const normalized = provider.trim().toLowerCase();

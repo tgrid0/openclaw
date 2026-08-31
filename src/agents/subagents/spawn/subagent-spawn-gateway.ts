@@ -8,8 +8,8 @@ import {
   resolveLeastPrivilegeOperatorScopesForMethod,
 } from "./subagent-spawn.runtime.js";
 
-const DEFAULT_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 7_200_000;
-const MAX_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 7_200_000;
+const DEFAULT_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 36_000_000;
+const MAX_SUBAGENT_AGENT_GATEWAY_TIMEOUT_MS = 36_000_000;
 
 type SubagentGatewayResponse = Awaited<ReturnType<typeof callGateway>>;
 type SubagentGatewayDispatchMode = "in_process" | "out_of_process";

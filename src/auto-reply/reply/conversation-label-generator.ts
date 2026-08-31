@@ -9,7 +9,7 @@ import type { OpenClawConfig } from "../../config/types.openclaw.js";
 const DEFAULT_MAX_LABEL_LENGTH = 128;
 // Reasoning models spend output tokens before emitting the short visible label.
 const CONVERSATION_LABEL_MAX_TOKENS = 4_096;
-const TIMEOUT_MS = 7_200_000;
+const TIMEOUT_MS = 36_000_000;
 
 type LabelModelPhase = "utility" | "primary fallback";
 type ConversationLabelAttempt = {

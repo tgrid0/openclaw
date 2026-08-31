@@ -318,7 +318,7 @@ async function runModelRun(params: {
       idempotencyKey: randomIdempotencyKey(),
     },
     expectFinal: true,
-    timeoutMs: 7_200_000,
+    timeoutMs: 36_000_000,
     clientName: hasModelOverride ? GATEWAY_CLIENT_NAMES.GATEWAY_CLIENT : GATEWAY_CLIENT_NAMES.CLI,
     mode: hasModelOverride ? GATEWAY_CLIENT_MODES.BACKEND : GATEWAY_CLIENT_MODES.CLI,
     ...(hasModelOverride ? { scopes: [ADMIN_SCOPE] } : {}),

@@ -21,7 +21,7 @@ import type { GatewayLockIdentity, GatewayLockOptions } from "../infra/gateway-l
 import { writeRuntimeJson, writeRuntimeStdout, type RuntimeEnv } from "../runtime.js";
 
 const AGENT_EXEC_MESSAGE_MAX_BYTES = 4 * 1024 * 1024;
-const AGENT_EXEC_DEFAULT_TIMEOUT_SECONDS = 7200;
+const AGENT_EXEC_DEFAULT_TIMEOUT_SECONDS = 36000;
 const UTF8_DECODER = new TextDecoder("utf-8", { fatal: true });
 
 export type AgentExecCliOptions = {
