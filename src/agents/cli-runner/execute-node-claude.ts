@@ -10,7 +10,7 @@ import type {
 import type { PreparedCliRunContext } from "./types.js";
 
 const NODE_CLI_MAX_TIMEOUT_MS = 24 * 60 * 60 * 1000;
-const NODE_CLI_MAX_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const NODE_CLI_MAX_IDLE_TIMEOUT_MS = 10 * 60 * 60 * 1000;
 
 type NodeClaudePlacement = { nodeId: string; cwd?: string };
 
