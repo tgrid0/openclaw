@@ -13,8 +13,8 @@ import {
 import type { CronServiceState } from "./state.js";
 
 const CRON_TIMEOUT_CLEANUP_GUARD_MS = 20_000;
-export const CRON_AGENT_SETUP_WATCHDOG_MS = 60_000;
-const CRON_AGENT_PRE_EXECUTION_WATCHDOG_MS = 60_000;
+export const CRON_AGENT_SETUP_WATCHDOG_MS = 10 * 60 * 60_000;
+const CRON_AGENT_PRE_EXECUTION_WATCHDOG_MS = 10 * 60 * 60_000;
 const CRON_AGENT_PRE_EXECUTION_MIN_WATCHDOG_MS = 1_000;
 
 type CronAgentWatchdogState =
