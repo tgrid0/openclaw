@@ -15,7 +15,7 @@ import {
   type UndiciGlobalDispatcherDeps,
 } from "./undici-runtime.js";
 
-export const DEFAULT_UNDICI_STREAM_TIMEOUT_MS = 30 * 60 * 1000;
+export const DEFAULT_UNDICI_STREAM_TIMEOUT_MS = 10 * 60 * 60 * 1000;
 const HTTP1_ONLY_DISPATCHER_OPTIONS = Object.freeze({
   allowH2: false as const,
 });
