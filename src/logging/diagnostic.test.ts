@@ -932,7 +932,7 @@ describe("stuck session diagnostics threshold", () => {
       vi.advanceTimersByTime(stuckSessionAbortMs);
       expect(recoverStuckSession).not.toHaveBeenCalled();
 
-      vi.advanceTimersByTime(15 * 60_000 - stuckSessionAbortMs);
+      vi.advanceTimersByTime(36_000_000 - stuckSessionAbortMs);
     } finally {
       unsubscribe();
     }
@@ -1409,7 +1409,7 @@ describe("stuck session diagnostics threshold", () => {
     vi.advanceTimersByTime(30_000);
     expect(recoverStuckSession).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(15 * 60_000 - stuckSessionAbortMs);
+    vi.advanceTimersByTime(36_000_000 - stuckSessionAbortMs);
     expectRecoveryCall(
       recoverStuckSession,
       { sessionId: "s1", sessionKey: "main", queueDepth: 0, allowActiveAbort: true },
@@ -2811,7 +2811,7 @@ describe("stuck session diagnostics threshold", () => {
 
   it("uses fixed session attention thresholds", () => {
     expect(resolveStuckSessionWarnMs()).toBe(120_000);
-    expect(resolveStuckSessionAbortMs(30_000)).toBe(5 * 60_000);
+    expect(resolveStuckSessionAbortMs(30_000)).toBe(36_000_000);
   });
 });
 

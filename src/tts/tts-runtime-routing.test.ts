@@ -423,7 +423,7 @@ describe("TTS runtime native voice-note routing", () => {
 
     expect(result.success).toBe(true);
     const request = requireFirstSynthesisRequest("provider default fallback timeout request");
-    expect(request.timeoutMs).toBe(30_000);
+    expect(request.timeoutMs).toBe(36_000_000);
   });
 
   it("keeps explicit TTS config timeout ahead of provider default timeout", async () => {

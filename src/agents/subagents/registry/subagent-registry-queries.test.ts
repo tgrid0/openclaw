@@ -17,7 +17,7 @@ import {
 } from "./subagent-registry-queries.js";
 import type { SubagentRunRecord } from "./subagent-registry.types.js";
 
-const STALE_UNENDED_SUBAGENT_RUN_MS = 2 * 60 * 60 * 1_000;
+const STALE_UNENDED_SUBAGENT_RUN_MS = 10 * 60 * 60 * 1_000;
 
 function makeRun(overrides: Partial<SubagentRunRecordOverrides>): SubagentRunRecord {
   const runId = overrides.runId ?? "run-default";

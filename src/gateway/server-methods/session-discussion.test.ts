@@ -309,7 +309,7 @@ describe("session discussion gateway methods", () => {
     mocks.getProvider.mockReturnValue(registered.value);
 
     const responsePromise = invoke("session.discussion.open", { sessionKey });
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(36_000_000);
 
     await expect(responsePromise).resolves.toMatchObject({
       ok: true,

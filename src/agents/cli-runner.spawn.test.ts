@@ -2255,7 +2255,7 @@ describe("runCliAgent spawn path", () => {
 
     const run = executePreparedCliRun(
       buildClaudeLiveRunContext({
-        timeoutMs: 3_600_000,
+        timeoutMs: 40_000_000,
       }),
     );
     const rejection = run.then(
@@ -2276,17 +2276,17 @@ describe("runCliAgent spawn path", () => {
       })}\n`,
     );
 
-    // Base watchdog (600s cap for a 1h budget) must not kill the quiet tool.
-    vi.advanceTimersByTime(650_000);
+    // Base watchdog (10h floor) must not kill the quiet tool before the floor.
+    vi.advanceTimersByTime(36_000_000 - 1_000);
     expect(cancel).not.toHaveBeenCalled();
 
-    // The blocked-tool floor (15min of quiet) still terminates a wedged tool.
+    // The blocked-tool floor (10h of quiet) still terminates a wedged tool.
     try {
-      vi.advanceTimersByTime(300_000);
+      vi.advanceTimersByTime(1_000);
       expect(cancel).toHaveBeenCalledWith("manual-cancel");
       const error = await rejection;
       expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toMatch(/produced no output for 900s/);
+      expect((error as Error).message).toMatch(/produced no output for 36000s/);
       // Watchdog-killed turns must keep timeout provenance for active tools.
       expect(toolErrorEvents).toContainEqual(
         expect.objectContaining({

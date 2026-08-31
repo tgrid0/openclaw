@@ -138,7 +138,7 @@ describe("skills workshop CLI gateway snapshot invalidation", () => {
       expect.objectContaining({
         method: "skills.proposals.apply",
         params: { agentId: "main", proposalId: proposal.record.id },
-        timeoutMs: 1_850_000,
+        timeoutMs: 36_050_000,
       }),
     );
     expect(gatewayRefreshState.getSkillsSnapshotVersion(mocks.workspaceDir)).toBeGreaterThan(
@@ -264,7 +264,7 @@ describe("skills workshop CLI gateway snapshot invalidation", () => {
           expectedRevisionHash: "b".repeat(64),
           correlationId: "optimizer-run-7",
         },
-        timeoutMs: 650_000,
+        timeoutMs: 36_050_000,
       });
       return {
         record: { id: "proposal-evaluate" },

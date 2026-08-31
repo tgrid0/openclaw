@@ -62,7 +62,7 @@ describe("generateConversationLabel", () => {
       agentDir: "/tmp/agents/billing/agent",
       systemPrompt: "Generate a label",
       prompt: "Need help with invoices",
-      timeoutMs: 15_000,
+      timeoutMs: 36_000_000,
       streamParams: { maxTokens: 4_096 },
     });
   });

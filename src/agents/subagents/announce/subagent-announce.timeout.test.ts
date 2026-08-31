@@ -135,7 +135,8 @@ vi.mock("./subagent-announce-delivery.js", () => ({
       },
     });
     const timeoutMs =
-      clampTimerTimeoutMs(configOverride.agents?.defaults?.subagents?.announceTimeoutMs) ?? 120_000;
+      clampTimerTimeoutMs(configOverride.agents?.defaults?.subagents?.announceTimeoutMs) ??
+      36_000_000;
     const retryDelaysMs =
       process.env.OPENCLAW_TEST_FAST === "1" ? [8, 16, 32] : [5_000, 10_000, 20_000];
     for (const delayMs of [...retryDelaysMs, undefined]) {
@@ -165,7 +166,7 @@ vi.mock("./subagent-announce-delivery.js", () => ({
     params.requesterOrigin,
   resolveSubagentAnnounceTimeoutMs: (cfg: typeof configOverride) => {
     const configured = cfg.agents?.defaults?.subagents?.announceTimeoutMs;
-    return clampTimerTimeoutMs(configured) ?? 120_000;
+    return clampTimerTimeoutMs(configured) ?? 36_000_000;
   },
   runAnnounceDeliveryWithRetry: async <T>(params: { run: () => Promise<T> }) => await params.run(),
 }));
@@ -297,13 +298,13 @@ describe("subagent announce timeout config", () => {
     fallbackRequesterResolution = null;
   });
 
-  it("uses 120s timeout by default for direct announce agent call", async () => {
+  it("uses the 10h default timeout for direct announce agent call", async () => {
     await runAnnounceFlowForTest("run-default-timeout");
 
     const directAgentCall = findGatewayCall(
       (call) => call.method === "agent" && call.expectFinal === true,
     );
-    expect(directAgentCall?.timeoutMs).toBe(120_000);
+    expect(directAgentCall?.timeoutMs).toBe(36_000_000);
   });
 
   it("honors configured announce timeout for direct announce agent call", async () => {

@@ -5,7 +5,7 @@ import type { CronJob } from "../types.js";
 import { resolveCronJobTimeoutMs } from "./timeout-policy.js";
 
 const DEFAULT_JOB_TIMEOUT_MS = 10 * 60_000;
-const AGENT_TURN_SAFETY_TIMEOUT_MS = 60 * 60_000;
+const AGENT_TURN_SAFETY_TIMEOUT_MS = 10 * 60 * 60_000;
 
 function makeJob(payload: CronJob["payload"]): CronJob {
   const sessionTarget = payload.kind === "agentTurn" ? "isolated" : "main";

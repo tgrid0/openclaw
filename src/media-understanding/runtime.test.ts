@@ -547,7 +547,7 @@ describe("media-understanding runtime", () => {
       model: "glm-4.6v",
       prompt: "Describe it",
       maxTokens: undefined,
-      timeoutMs: 30_000,
+      timeoutMs: 36_000_000,
       cfg: {},
       agentDir: "/tmp/agent",
     });

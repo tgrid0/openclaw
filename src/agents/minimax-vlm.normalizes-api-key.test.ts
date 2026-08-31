@@ -161,7 +161,7 @@ describe("minimaxUnderstandImage apiKey normalization", () => {
 
     expect(fetchWithSsrFGuardMock).toHaveBeenCalledOnce();
     const opts = fetchWithSsrFGuardMock.mock.calls[0]?.[0];
-    expect(opts?.timeoutMs).toBe(60_000);
+    expect(opts?.timeoutMs).toBe(36_000_000);
   });
 
   it("clamps oversized caller request timeouts before creating the abort signal", async () => {

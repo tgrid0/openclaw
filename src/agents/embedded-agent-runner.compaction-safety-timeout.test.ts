@@ -7,7 +7,7 @@ import {
   resolveCompactionTimeoutMs,
 } from "./embedded-agent-runner/compaction-safety-timeout.js";
 
-const EMBEDDED_COMPACTION_TIMEOUT_MS = 180_000;
+const EMBEDDED_COMPACTION_TIMEOUT_MS = 36_000_000;
 
 describe("compactWithSafetyTimeout", () => {
   beforeEach(() => {

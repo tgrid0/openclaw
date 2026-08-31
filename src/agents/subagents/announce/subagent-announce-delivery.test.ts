@@ -1088,7 +1088,7 @@ describe("deliverSubagentAnnouncement active requester steering", () => {
         steeringMode: "all",
         debounceMs: 500,
         waitForTranscriptCommit: true,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
       },
     );
     expect(queueEmbeddedAgentMessageWithOutcome).toHaveBeenNthCalledWith(
@@ -1098,7 +1098,7 @@ describe("deliverSubagentAnnouncement active requester steering", () => {
       {
         steeringMode: "all",
         debounceMs: 500,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
       },
     );
   });
@@ -1108,7 +1108,7 @@ describe("deliverSubagentAnnouncement active requester steering", () => {
       name: "waits through compaction and re-steers the active requester (86566)",
       outcomes: ["compacting", true],
       announceTimeoutMs: undefined,
-      retryWindowMs: 120_000,
+      retryWindowMs: 36_000_000,
     },
     {
       name: "keeps retrying compaction past the backoff schedule until the delivery timeout (86566)",
@@ -1337,7 +1337,7 @@ describe("deliverSubagentAnnouncement completion delivery", () => {
         steeringMode: "all",
         debounceMs: 500,
         waitForTranscriptCommit: true,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
       },
     );
     expect(callGateway).not.toHaveBeenCalled();
@@ -1935,7 +1935,7 @@ describe("deliverSubagentAnnouncement completion delivery", () => {
         targetSessionId: "requester-session-local",
         idempotencyKey: "announce-local-dispatch",
       },
-      timeoutMs: 120_000,
+      timeoutMs: 36_000_000,
     });
   });
 
@@ -2390,7 +2390,7 @@ describe("deliverSubagentAnnouncement completion delivery", () => {
       "child done",
       {
         debounceMs: 500,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
         steeringMode: "all",
         waitForTranscriptCommit: true,
       },
@@ -2401,7 +2401,7 @@ describe("deliverSubagentAnnouncement completion delivery", () => {
       "child done",
       {
         debounceMs: 500,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
         steeringMode: "all",
       },
     );

@@ -453,8 +453,8 @@ describe("createMusicGenerateTool", () => {
     expect(details.count).toBe(1);
     expect(details.instrumental).toBe(true);
     expect(details.lyrics).toEqual(["wake the city up"]);
-    expect(details.timeoutMs).toBe(300_000);
-    expect(generateMusicOptions().timeoutMs).toBe(300_000);
+    expect(details.timeoutMs).toBe(36_000_000);
+    expect(generateMusicOptions().timeoutMs).toBe(36_000_000);
     expect((details.media as { mediaUrls?: unknown }).mediaUrls).toEqual([
       "/tmp/generated-night-drive.mp3",
     ]);
@@ -522,15 +522,15 @@ describe("createMusicGenerateTool", () => {
 
     expect(generateSpy).toHaveBeenCalledTimes(1);
     expect(generateMusicOptions().autoProviderFallback).toBe(false);
-    expect(generateMusicOptions().timeoutMs).toBe(120_000);
-    expect(text).toContain("Timeout normalized: requested 1000ms; used 120000ms.");
+    expect(generateMusicOptions().timeoutMs).toBe(36_000_000);
+    expect(text).toContain("Timeout normalized: requested 1000ms; used 36000000ms.");
     const details = detailsOf(result);
-    expect(details.timeoutMs).toBe(120_000);
+    expect(details.timeoutMs).toBe(36_000_000);
     expect(details.requestedTimeoutMs).toBe(1000);
     expect(details.timeoutNormalization).toEqual({
       requested: 1000,
-      applied: 120_000,
-      minimum: 120_000,
+      applied: 36_000_000,
+      minimum: 36_000_000,
     });
   });
 
@@ -742,7 +742,7 @@ describe("createMusicGenerateTool", () => {
 
     expect(text).toContain("Background task started for music generation (task-123).");
     expect(text).toContain("Do not call music_generate again for this request.");
-    expect(text).toContain("Timeout normalized: requested 1000ms; used 120000ms.");
+    expect(text).toContain("Timeout normalized: requested 1000ms; used 36000000ms.");
     expect(onAsyncTaskStarted).toHaveBeenCalledOnce();
     expect(onAsyncTaskStarted).toHaveBeenCalledWith(
       "Music generation started; wait for the generated music completion event.",
@@ -752,12 +752,12 @@ describe("createMusicGenerateTool", () => {
     expect(details.status).toBe("started");
     expect((details.task as { taskId?: unknown }).taskId).toBe("task-123");
     expect(details.instrumental).toBe(true);
-    expect(details.timeoutMs).toBe(120_000);
+    expect(details.timeoutMs).toBe(36_000_000);
     expect(details.requestedTimeoutMs).toBe(1000);
     expect(details.timeoutNormalization).toEqual({
       requested: 1000,
-      applied: 120_000,
-      minimum: 120_000,
+      applied: 36_000_000,
+      minimum: 36_000_000,
     });
     expect((result as { terminate?: boolean }).terminate).toBeUndefined();
     if (!scheduledWork) {
@@ -765,7 +765,7 @@ describe("createMusicGenerateTool", () => {
     }
     await scheduledWork();
     expect(generateMusicOptions().autoProviderFallback).toBe(false);
-    expect(generateMusicOptions().timeoutMs).toBe(120_000);
+    expect(generateMusicOptions().timeoutMs).toBe(36_000_000);
     const progress = taskProgressCall();
     expect(String(progress.runId)).toMatch(/^tool:music_generate:/);
     expect(progress.progressSummary).toBe("Generating music");

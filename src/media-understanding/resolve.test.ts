@@ -18,7 +18,7 @@ describe("media timeout resolution", () => {
 
   it("caps explicit runtime timeout milliseconds to timer-safe values", () => {
     expect(resolveMediaRuntimeTimeoutMs(Number.MAX_SAFE_INTEGER)).toBe(MAX_TIMER_TIMEOUT_MS);
-    expect(resolveMediaRuntimeTimeoutMs(undefined)).toBe(30_000);
+    expect(resolveMediaRuntimeTimeoutMs(undefined)).toBe(36_000_000);
   });
 });
 

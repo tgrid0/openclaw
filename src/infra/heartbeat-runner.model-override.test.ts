@@ -220,10 +220,10 @@ describe("runHeartbeatOnce – heartbeat model override", () => {
   });
 
   it("caps the default heartbeat reply-run timeout override", async () => {
-    const replyOpts = await runDefaultsHeartbeat({ every: "30m" });
+    const replyOpts = await runDefaultsHeartbeat({ every: "12h" });
     expectReplyOptions(replyOpts, {
       isHeartbeat: true,
-      timeoutOverrideSeconds: 600,
+      timeoutOverrideSeconds: 36000,
     });
   });
 

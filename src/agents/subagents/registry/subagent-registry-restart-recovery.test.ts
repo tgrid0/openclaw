@@ -300,8 +300,8 @@ describe("subagent registry restart recovery", () => {
 
   it("returns stale and durable terminal owners to the sweeper finalizer", async () => {
     const stale = run({
-      createdAt: Date.now() - 3 * 60 * 60_000,
-      startedAt: Date.now() - 3 * 60 * 60_000,
+      createdAt: Date.now() - 11 * 60 * 60_000,
+      startedAt: Date.now() - 11 * 60 * 60_000,
     });
     await expect(recover(stale)).resolves.toMatchObject({
       status: "terminal",

@@ -19,11 +19,11 @@ import {
 } from "./llm-idle-timeout.js";
 import { clearToolActivityRun, notifyToolActivity } from "./tool-activity-heartbeat.js";
 
-const DEFAULT_LLM_IDLE_TIMEOUT_MS = 120_000;
-const SELF_HOSTED_LLM_IDLE_TIMEOUT_MS = 300_000;
-const CRON_LLM_IDLE_TIMEOUT_MS = 60_000;
+const DEFAULT_LLM_IDLE_TIMEOUT_MS = 36_000_000;
+const SELF_HOSTED_LLM_IDLE_TIMEOUT_MS = 36_000_000;
+const CRON_LLM_IDLE_TIMEOUT_MS = 36_000_000;
 const CLOUD_LLM_FIRST_EVENT_TIMEOUT_MS = DEFAULT_LLM_IDLE_TIMEOUT_MS;
-const LOCAL_LLM_FIRST_EVENT_TIMEOUT_MS = 300_000;
+const LOCAL_LLM_FIRST_EVENT_TIMEOUT_MS = 36_000_000;
 
 describe("resolveLlmIdleTimeoutMs", () => {
   it("returns default when config is undefined", () => {
@@ -36,7 +36,7 @@ describe("resolveLlmIdleTimeoutMs", () => {
   });
 
   it("caps agents.defaults.timeoutSeconds fallback at the default idle watchdog", () => {
-    const cfg = { agents: { defaults: { timeoutSeconds: 300 } } } as OpenClawConfig;
+    const cfg = { agents: { defaults: { timeoutSeconds: 40_000 } } } as OpenClawConfig;
     expect(resolveLlmIdleTimeoutMs({ cfg })).toBe(DEFAULT_LLM_IDLE_TIMEOUT_MS);
   });
 
@@ -46,7 +46,7 @@ describe("resolveLlmIdleTimeoutMs", () => {
   });
 
   it("caps an explicit run timeout override at the default idle watchdog", () => {
-    expect(resolveLlmIdleTimeoutMs({ runTimeoutMs: 900_000 })).toBe(DEFAULT_LLM_IDLE_TIMEOUT_MS);
+    expect(resolveLlmIdleTimeoutMs({ runTimeoutMs: 40_000_000 })).toBe(DEFAULT_LLM_IDLE_TIMEOUT_MS);
   });
 
   it("uses an explicit run timeout override when shorter than the default idle watchdog", () => {
@@ -78,7 +78,7 @@ describe("resolveLlmIdleTimeoutMs", () => {
   });
 
   it("caps explicit cron run timeouts so stream stalls can reach model fallbacks", () => {
-    expect(resolveLlmIdleTimeoutMs({ trigger: "cron", runTimeoutMs: 600_000 })).toBe(
+    expect(resolveLlmIdleTimeoutMs({ trigger: "cron", runTimeoutMs: 40_000_000 })).toBe(
       CRON_LLM_IDLE_TIMEOUT_MS,
     );
   });
@@ -202,7 +202,7 @@ describe("resolveLlmIdleTimeoutMs", () => {
       expect(
         resolveLlmIdleTimeoutMs({
           trigger: "cron",
-          runTimeoutMs: 600_000,
+          runTimeoutMs: 40_000_000,
           model: { provider, id, baseUrl },
         }),
       ).toBe(CRON_LLM_IDLE_TIMEOUT_MS);
@@ -213,14 +213,14 @@ describe("resolveLlmIdleTimeoutMs", () => {
     expect(
       resolveLlmIdleTimeoutMs({
         trigger: "cron",
-        runTimeoutMs: 600_000,
+        runTimeoutMs: 40_000_000,
         model: { provider: "openai", id: "openai/gpt-5.5", baseUrl: "https://api.openai.com/v1" },
       }),
     ).toBe(CRON_LLM_IDLE_TIMEOUT_MS);
     expect(
       resolveLlmIdleTimeoutMs({
         trigger: "cron",
-        runTimeoutMs: 600_000,
+        runTimeoutMs: 40_000_000,
         model: { provider: "ollama", id: "ollama/gpt-oss:cloud", baseUrl: "http://ollama-host" },
       }),
     ).toBe(CRON_LLM_IDLE_TIMEOUT_MS);
@@ -359,7 +359,7 @@ describe("resolveLlmIdleTimeoutMs", () => {
   });
 
   it("caps agents.defaults.timeoutSeconds for cron before disabling the default idle timeout", () => {
-    const cfg = { agents: { defaults: { timeoutSeconds: 300 } } } as OpenClawConfig;
+    const cfg = { agents: { defaults: { timeoutSeconds: 40_000 } } } as OpenClawConfig;
     expect(resolveLlmIdleTimeoutMs({ cfg, trigger: "cron" })).toBe(DEFAULT_LLM_IDLE_TIMEOUT_MS);
   });
 
@@ -520,28 +520,28 @@ describe("resolveLlmIdleTimeoutMs", () => {
   });
 
   it.each([
-    ["local keeps no class ceiling", { baseUrl: "http://127.0.0.1:11434" }, 3_600_000],
+    ["local keeps no class ceiling", { baseUrl: "http://127.0.0.1:11434" }, 40_000_000],
     [
-      "self-hosted keeps the 300s tier",
+      "self-hosted keeps the class tier",
       { provider: "vllm", baseUrl: "https://gpu.example.com/v1" },
-      300_000,
+      36_000_000,
     ],
-    ["cloud keeps the 120s default", { provider: "openai" }, 120_000],
+    ["cloud keeps the class default", { provider: "openai" }, 36_000_000],
   ])("large agents.defaults.timeoutSeconds: %s", (_label, model, expected) => {
-    const cfg = { agents: { defaults: { timeoutSeconds: 3_600 } } } as OpenClawConfig;
+    const cfg = { agents: { defaults: { timeoutSeconds: 40_000 } } } as OpenClawConfig;
     expect(resolveLlmIdleTimeoutMs({ cfg, model })).toBe(expected);
   });
 
   it.each([
-    ["local keeps no class ceiling", { baseUrl: "http://127.0.0.1:11434" }, 900_000],
+    ["local keeps no class ceiling", { baseUrl: "http://127.0.0.1:11434" }, 40_000_000],
     [
-      "self-hosted keeps the 300s tier",
+      "self-hosted keeps the class tier",
       { provider: "vllm", baseUrl: "https://gpu.example.com/v1" },
-      300_000,
+      36_000_000,
     ],
-    ["cloud keeps the 120s default", { provider: "openai" }, 120_000],
+    ["cloud keeps the class default", { provider: "openai" }, 36_000_000],
   ])("explicit run timeout above the tiers: %s", (_label, model, expected) => {
-    expect(resolveLlmIdleTimeoutMs({ runTimeoutMs: 900_000, model })).toBe(expected);
+    expect(resolveLlmIdleTimeoutMs({ runTimeoutMs: 40_000_000, model })).toBe(expected);
   });
 
   it("explicit run timeouts below the class tier still bound self-hosted idle", () => {
@@ -553,21 +553,21 @@ describe("resolveLlmIdleTimeoutMs", () => {
     ).toBe(90_000);
   });
 
-  it("cron exempts provider-id self-hosted models from the 60s clamp", () => {
+  it("cron exempts provider-id self-hosted models from the stall cap", () => {
     expect(
       resolveLlmIdleTimeoutMs({
         trigger: "cron",
-        runTimeoutMs: 900_000,
+        runTimeoutMs: 40_000_000,
         model: { provider: "vllm", baseUrl: "https://gpu.example.com/v1" },
       }),
-    ).toBe(900_000);
+    ).toBe(40_000_000);
     expect(
       resolveLlmIdleTimeoutMs({
         trigger: "cron",
-        runTimeoutMs: 900_000,
+        runTimeoutMs: 40_000_000,
         model: { provider: "openai" },
       }),
-    ).toBe(60_000);
+    ).toBe(CRON_LLM_IDLE_TIMEOUT_MS);
   });
 });
 
