@@ -39,7 +39,7 @@ const MAX_SUPERSEDED_RUNS = 256;
 const MAX_DORMANT_RUNS = 256;
 const MAX_DISABLED_RUNS = 512;
 
-export const SESSION_OBSERVER_MODEL_MAX_TOKENS = 300;
+export const SESSION_OBSERVER_MODEL_MAX_TOKENS = 4096;
 
 export function sessionObserverScopeKey(sessionKey: string, agentId: string): string {
   return parseAgentSessionKey(sessionKey)
