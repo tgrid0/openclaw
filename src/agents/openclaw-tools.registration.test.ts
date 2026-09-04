@@ -752,4 +752,26 @@ describe("tool gating pin stability", () => {
     expect(optionsForTurn(1)?.clientCaps).toEqual(["ui-commands"]);
     expect(optionsForTurn(1)?.sandboxed).toBe(false);
   });
+
+  it("keeps the client-cap gated core tools stable across turns of one session", () => {
+    // Registration-level guard for the final filterToolsByClientCaps call: if it ever reads live
+    // options.clientCaps again, a client that changes caps mid-conversation reshapes the wire
+    // tools array and drops the KV-cache prefix.
+    const turnOne = createFastToolNames({
+      config: {} as OpenClawConfig,
+      agentSessionKey: "agent:main:main",
+      sessionId: "session-1",
+      clientCaps: ["ui-commands"],
+    });
+    const turnTwo = createFastToolNames({
+      config: {} as OpenClawConfig,
+      agentSessionKey: "agent:main:main",
+      sessionId: "session-1",
+      clientCaps: ["inline-widgets"],
+    });
+
+    expect(turnTwo).toEqual(turnOne);
+    expect(turnOne).toContain("screen");
+    expect(turnOne).not.toContain("show_widget");
+  });
 });
