@@ -28,15 +28,21 @@ function setPin(key: string, snapshot: ToolGatingSnapshot): void {
   toolGatingPins.set(key, snapshot);
 }
 
+function copyClientCaps(clientCaps?: string[]): string[] | undefined {
+  return clientCaps ? [...clientCaps] : undefined;
+}
+
 function sameClientCaps(a?: string[], b?: string[]): boolean {
-  if (a === b) {
-    return true;
+  if (!a || !b) {
+    // Both absent agrees; presence against absence is real drift the warning must catch. No
+    // `a === b` fast path: identical references would hide a caller mutating a shared array.
+    return !a && !b;
   }
-  if (!a || !b || a.length !== b.length) {
+  if (a.length !== b.length) {
     return false;
   }
-  const sortedA = [...a].sort();
-  const sortedB = [...b].sort();
+  const sortedA = a.toSorted();
+  const sortedB = b.toSorted();
   return sortedA.every((value, index) => value === sortedB[index]);
 }
 
@@ -44,9 +50,12 @@ function sameClientCaps(a?: string[], b?: string[]): boolean {
  * Freezes embedded/sandboxed/clientCaps the first time a session key is seen
  * and reuses that snapshot on later turns, so a live flip elsewhere in the
  * process (e.g. isEmbeddedMode()) cannot reshape an in-flight conversation's
- * tools array. A new sessionId for the same key (set on /new and /reset)
- * starts a fresh pin, since that is a genuinely new conversation. Calls with
- * no pinKey are not tracked and always see live values.
+ * tools array. A pin rotates only when both the stored and incoming sessionId are present and
+ * differ (set on /new and /reset). A pin created without a sessionId never rotates on sessionId
+ * alone, because rotating on a first-seen sessionId could itself flip the tools array between
+ * turn 1 and turn 2 — the bug this pin exists to prevent. Pins are evicted least-recently-used
+ * once more than MAX_TOOL_GATING_PINS session keys are live. Calls with no pinKey are not
+ * tracked and always see live values.
  */
 export function resolvePinnedToolGating(params: {
   pinKey?: string;
@@ -66,9 +75,17 @@ export function resolvePinnedToolGating(params: {
   const existing = toolGatingPins.get(params.pinKey);
   const isNewSession =
     !existing ||
-    (Boolean(params.sessionId) && Boolean(existing.sessionId) && params.sessionId !== existing.sessionId);
+    (Boolean(params.sessionId) &&
+      Boolean(existing.sessionId) &&
+      params.sessionId !== existing.sessionId);
   if (isNewSession) {
-    setPin(params.pinKey, { ...live, sessionId: params.sessionId });
+    // Store a copy: clientCaps arrives as per-turn caller state, and a snapshot that aliases it
+    // would change shape when the caller reuses or mutates the array on a later turn.
+    setPin(params.pinKey, {
+      ...live,
+      clientCaps: copyClientCaps(live.clientCaps),
+      sessionId: params.sessionId,
+    });
     return live;
   }
   const disagrees =
@@ -86,10 +103,17 @@ export function resolvePinnedToolGating(params: {
       live,
     });
   }
+  // Hit: re-insert so the map stays insertion-ordered by *use*. pruneMapToMaxSize evicts the
+  // first key, and per-run key churn (cron mints per-run session keys) would otherwise drop an
+  // actively used conversation's pin and silently re-pin it from live values mid-conversation.
+  toolGatingPins.delete(params.pinKey);
+  toolGatingPins.set(params.pinKey, existing);
   return {
     embedded: existing.embedded,
     sandboxed: existing.sandboxed,
-    clientCaps: existing.clientCaps,
+    // Hand back a copy for the same reason setPin stores one: the pinned array is handed to tool
+    // construction every turn, and one consumer mutating it would reshape every later snapshot.
+    clientCaps: copyClientCaps(existing.clientCaps),
   };
 }
 
