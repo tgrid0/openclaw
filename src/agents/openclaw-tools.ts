@@ -32,6 +32,7 @@ import {
 } from "./openclaw-tools.registration.js";
 import { createRequesterYieldCallback } from "./openclaw-tools.requester-yield.js";
 import { createOpenClawSwarmToolGroups } from "./openclaw-tools.swarm.js";
+import { resolvePinnedToolGating } from "./openclaw-tools.tool-gating-pin.js";
 import { resolveTranscriptsTool } from "./openclaw-tools.transcripts.js";
 import type { OpenClawToolsOptions } from "./openclaw-tools.types.js";
 import { resolveWidgetPresentationForRun } from "./openclaw-tools.widget-presentation.js";
@@ -90,6 +91,16 @@ import { resolveWorkspaceRoot } from "./workspace-dir.js";
 
 export { filterToolsByClientCaps } from "./openclaw-tools.client-caps.js";
 export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentTool[] {
+  const pinnedGating = resolvePinnedToolGating({
+    pinKey: normalizeOptionalString(options?.runSessionKey ?? options?.agentSessionKey),
+    embedded: isEmbeddedMode(),
+    sandboxed: Boolean(options?.sandboxed),
+    clientCaps: options?.clientCaps,
+    sessionId: options?.sessionId,
+  });
+  const gatedOptions = options
+    ? { ...options, sandboxed: pinnedGating.sandboxed, clientCaps: pinnedGating.clientCaps }
+    : options;
   const resolvedConfig = options?.config;
   const sessionConfig = options?.sessionConfigSource === "runtime" ? undefined : resolvedConfig;
   const activeProjectKeys = options?.preparedModelRuntime?.activeProjectKeys ?? [];
@@ -220,14 +231,14 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
     config: options?.config,
     enabled: options?.webSearchEnabled,
     agentDir: options?.agentDir,
-    sandboxed: options?.sandboxed,
+    sandboxed: gatedOptions?.sandboxed,
     runtimeWebSearch: runtimeWebTools?.search,
     lateBindRuntimeConfig: true,
   });
   options?.recordToolPrepStage?.("openclaw-tools:web-search-tool");
   const webFetchTool = createWebFetchTool({
     config: options?.config,
-    sandboxed: options?.sandboxed,
+    sandboxed: gatedOptions?.sandboxed,
     runtimeWebFetch: runtimeWebTools?.fetch,
     lateBindRuntimeConfig: true,
     hostnameAllowlistRef: options?.webFetchHostnameAllowlistRef,
@@ -292,7 +303,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
     workspaceDir,
   });
   options?.recordToolPrepStage?.("openclaw-tools:nodes-tool");
-  const embedded = isEmbeddedMode();
+  const embedded = pinnedGating.embedded;
   const explicitFactoryAllowlist = mergeFactoryPolicyList(
     resolvedConfig?.tools?.allow,
     resolvedConfig?.tools?.alsoAllow,
@@ -312,7 +323,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
     });
   const sessionLookupToolOptions = {
     agentSessionKey: options?.runSessionKey ?? options?.agentSessionKey,
-    sandboxed: options?.sandboxed,
+    sandboxed: gatedOptions?.sandboxed,
     config: sessionConfig,
     callGateway: embedded ? createEmbeddedCallGateway() : callAgentToolGatewayRequest,
     sessionLinkBase: resolveControlUiSessionLinkBase(resolvedConfig),
@@ -372,14 +383,14 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
             agentSessionKey: options?.runSessionKey ?? options?.agentSessionKey,
             agentSessionId: options?.sessionId,
             requesterAgentIdOverride: sessionAgentId,
-            sandboxed: options?.sandboxed,
+            sandboxed: gatedOptions?.sandboxed,
             config: sessionConfig,
           }),
           createScreenTool({
             agentSessionKey: options?.runSessionKey ?? options?.agentSessionKey,
             agentId: sessionAgentId,
           }),
-          ...(options?.sandboxed
+          ...(gatedOptions?.sandboxed
             ? []
             : [
                 createTerminalTool({
@@ -413,7 +424,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
             agentId: sessionAgentId,
             agentSessionKey: options?.runSessionKey ?? options?.agentSessionKey,
             inlineHostEnabled: isCoreCanvasHostEnabled(resolvedConfig),
-            inlineClientAvailable: options?.clientCaps?.includes("inline-widgets") === true,
+            inlineClientAvailable: gatedOptions?.clientCaps?.includes("inline-widgets") === true,
             presenters: widgetPresentation.presenters,
             presenterContext: widgetPresentation.context,
           }),
@@ -459,7 +470,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
       sessionAgentId,
       config: resolvedConfig,
     }),
-    ...(options?.sandboxed && !options.skillWorkshop?.libraryAuthoring
+    ...(gatedOptions?.sandboxed && !options.skillWorkshop?.libraryAuthoring
       ? []
       : [
           createConfiguredSkillWorkshopTool({
@@ -540,7 +551,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
             agentId: sessionAgentId,
             agentSessionKey: options?.agentSessionKey,
             agentChannel: options?.agentChannel,
-            sandboxed: options?.sandboxed,
+            sandboxed: gatedOptions?.sandboxed,
             config: sessionConfig,
           }),
         ]),
@@ -563,7 +574,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
             agentGroupChannel: options?.agentGroupChannel,
             agentGroupSpace: options?.agentGroupSpace,
             agentMemberRoleIds: options?.agentMemberRoleIds,
-            sandboxed: options?.sandboxed,
+            sandboxed: gatedOptions?.sandboxed,
             config: resolvedConfig,
             requesterAgentIdOverride: sessionAgentId,
             requesterRunId: options?.runId,
@@ -596,7 +607,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
       requesterAgentIdOverride: sessionAgentId,
       runSessionKey: options?.runSessionKey,
       config: sessionConfig,
-      sandboxed: options?.sandboxed,
+      sandboxed: gatedOptions?.sandboxed,
       activeModelProvider: options?.modelProvider,
       activeModelId: options?.modelId,
       metadataSnapshot: options?.preparedModelRuntime?.metadataSnapshot,
@@ -623,7 +634,7 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
     options?.recordToolPrepStage?.("openclaw-tools:plugin-tools");
   }
 
-  allTools = filterToolsByClientCaps(allTools, options?.clientCaps);
+  allTools = filterToolsByClientCaps(allTools, gatedOptions?.clientCaps);
   options?.recordToolPrepStage?.("openclaw-tools:client-capabilities");
   for (const tool of allTools) {
     bindAssembledAgentToolActionDescriptor(tool);
