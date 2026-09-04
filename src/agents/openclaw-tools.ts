@@ -24,6 +24,7 @@ import {
 } from "./openclaw-tools.media-factory-plan.js";
 import { createMediaGenerationAsyncStartCallback } from "./openclaw-tools.media-yield.js";
 import { applyNodesToolWorkspaceGuard } from "./openclaw-tools.nodes-workspace-guard.js";
+import type { OpenClawToolsOptions } from "./openclaw-tools.options.js";
 import {
   collectPresentOpenClawTools,
   shouldIncludeAskUserToolForOpenClawTools,
@@ -626,7 +627,9 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
     allTools = [
       ...tools,
       ...resolveOpenClawPluginToolsForOptions({
-        options: { ...options, activeProjectKeys },
+        // Plugin tool presence must use the pinned gating values, or a mid-conversation
+        // clientCaps/sandboxed flip reshapes the wire tools array and breaks the KV prefix.
+        options: { ...gatedOptions, activeProjectKeys },
         resolvedConfig,
         existingToolNames: new Set(tools.map((tool) => tool.name)),
       }),
