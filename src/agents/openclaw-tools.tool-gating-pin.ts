@@ -111,8 +111,9 @@ export function resolvePinnedToolGating(params: {
   return {
     embedded: existing.embedded,
     sandboxed: existing.sandboxed,
-    // Hand back a copy for the same reason setPin stores one: the pinned array is handed to tool
+    // Hand back a copy on hit turns for the same reason setPin stores one: this array reaches tool
     // construction every turn, and one consumer mutating it would reshape every later snapshot.
+    // Turn one differs: it returns the caller's own array; only the stored snapshot is copied.
     clientCaps: copyClientCaps(existing.clientCaps),
   };
 }
