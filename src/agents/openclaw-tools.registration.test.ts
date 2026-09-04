@@ -12,6 +12,7 @@ import {
   shouldIncludeAskUserToolForOpenClawTools,
   shouldIncludeUpdatePlanToolForOpenClawTools,
 } from "./openclaw-tools.registration.js";
+import { resetToolGatingPinsForTests } from "./openclaw-tools.tool-gating-pin.js";
 import { textResult, type AnyAgentTool } from "./tools/common.js";
 import { createPdfTool } from "./tools/pdf-tool.js";
 import { createUpdatePlanTool } from "./tools/update-plan-tool.js";
@@ -76,6 +77,7 @@ function expectToolNamed(
 describe("openclaw-tools update_plan gating", () => {
   afterEach(() => {
     setEmbeddedMode(false);
+    resetToolGatingPinsForTests();
   });
 
   it("keeps concrete OpenClaw tool names in the factory descriptor catalog", () => {
@@ -181,6 +183,7 @@ describe("openclaw-tools update_plan gating", () => {
       config: {} as OpenClawConfig,
       agentSessionKey: "agent:main:main",
     });
+    resetToolGatingPinsForTests();
     const sandboxed = createFastToolNames({
       config: {} as OpenClawConfig,
       agentSessionKey: "agent:main:main",
@@ -191,6 +194,7 @@ describe("openclaw-tools update_plan gating", () => {
       agentSessionKey: "agent:openclaw:main",
     });
     setEmbeddedMode(true);
+    resetToolGatingPinsForTests();
     const embedded = createFastToolNames({
       config: {} as OpenClawConfig,
       agentSessionKey: "agent:main:main",
@@ -567,6 +571,10 @@ function hasTool(tools: readonly { name: string }[], name: string): boolean {
 }
 
 describe("gateway client capability tool filtering", () => {
+  afterEach(() => {
+    resetToolGatingPinsForTests();
+  });
+
   it.each([
     { name: "no gateway client caps exist", clientCaps: undefined },
     { name: "a required cap is absent", clientCaps: ["tool-events"] },
@@ -626,6 +634,7 @@ describe("gateway client capability tool filtering", () => {
     expect(hasTool(createOpenClawTools({ agentSessionKey: "agent:main:main" }), "portal")).toBe(
       true,
     );
+    resetToolGatingPinsForTests();
     expect(
       hasTool(
         createOpenClawTools({ agentSessionKey: "agent:main:main", sandboxed: true }),
@@ -682,5 +691,49 @@ describe("gateway client capability tool filtering", () => {
         "show_widget",
       ),
     ).toBe(false);
+  });
+});
+
+describe("tool gating pin stability", () => {
+  afterEach(() => {
+    setEmbeddedMode(false);
+    resetToolGatingPinsForTests();
+  });
+
+  it("keeps the tool set stable across turns even if isEmbeddedMode() flips mid-conversation", () => {
+    const turnOne = createFastToolNames({
+      config: {} as OpenClawConfig,
+      agentSessionKey: "agent:main:main",
+      sessionId: "session-1",
+    });
+
+    setEmbeddedMode(true);
+
+    const turnTwo = createFastToolNames({
+      config: {} as OpenClawConfig,
+      agentSessionKey: "agent:main:main",
+      sessionId: "session-1",
+    });
+
+    expect(turnTwo).toEqual(turnOne);
+    expect(turnTwo).toContain("automations");
+  });
+
+  it("starts a fresh tool set when the session id changes for the same session key", () => {
+    createFastToolNames({
+      config: {} as OpenClawConfig,
+      agentSessionKey: "agent:main:main",
+      sessionId: "session-1",
+    });
+
+    setEmbeddedMode(true);
+
+    const newConversation = createFastToolNames({
+      config: {} as OpenClawConfig,
+      agentSessionKey: "agent:main:main",
+      sessionId: "session-2",
+    });
+
+    expect(newConversation).not.toContain("automations");
   });
 });
