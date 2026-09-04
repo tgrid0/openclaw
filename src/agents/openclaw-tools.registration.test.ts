@@ -6,6 +6,7 @@ import { withEnv } from "../test-utils/env.js";
 import { isToolWrappedWithBeforeToolCallHook } from "./agent-tools.before-tool-call.js";
 import { createOpenClawCodingTools } from "./agent-tools.js";
 import { resolveCoreToolFactoryFamily } from "./core-tool-factory-descriptors.js";
+import { resolveOpenClawPluginToolsForOptions } from "./openclaw-plugin-tools.js";
 import { createOpenClawTools } from "./openclaw-tools.js";
 import {
   collectPresentOpenClawTools,
@@ -17,8 +18,9 @@ import { textResult, type AnyAgentTool } from "./tools/common.js";
 import { createPdfTool } from "./tools/pdf-tool.js";
 import { createUpdatePlanTool } from "./tools/update-plan-tool.js";
 
+// Records what plugin tool resolution receives so the gating pin can be asserted at that seam.
 vi.mock("./openclaw-plugin-tools.js", () => ({
-  resolveOpenClawPluginToolsForOptions: () => [],
+  resolveOpenClawPluginToolsForOptions: vi.fn(() => []),
 }));
 
 type UpdatePlanGatingParams = Parameters<typeof shouldIncludeUpdatePlanToolForOpenClawTools>[0];
@@ -735,5 +737,19 @@ describe("tool gating pin stability", () => {
     });
 
     expect(newConversation).not.toContain("automations");
+  });
+
+  it("pins clientCaps and sandboxed for plugin tool resolution across turns", () => {
+    const pluginToolsMock = vi.mocked(resolveOpenClawPluginToolsForOptions);
+    pluginToolsMock.mockClear();
+    const turnOne = { agentSessionKey: "agent:main:main", sessionId: "session-1" } as const;
+
+    createOpenClawTools({ ...turnOne, sandboxed: false, clientCaps: ["ui-commands"] });
+    createOpenClawTools({ ...turnOne, sandboxed: true, clientCaps: ["inline-widgets"] });
+
+    const optionsForTurn = (index: number) => pluginToolsMock.mock.calls[index]?.[0]?.options;
+    expect(optionsForTurn(0)?.clientCaps).toEqual(["ui-commands"]);
+    expect(optionsForTurn(1)?.clientCaps).toEqual(["ui-commands"]);
+    expect(optionsForTurn(1)?.sandboxed).toBe(false);
   });
 });
