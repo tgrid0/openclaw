@@ -96,31 +96,42 @@ describe("resolvePinnedToolGating", () => {
 
   it("refreshes pin recency on a hit so eviction is least-recently-used", () => {
     resolvePinnedToolGating({ pinKey: "agent:idle:main", embedded: false, sandboxed: false });
+    // The repeatedly-hit pin must disagree with every live call the churn makes on it. Passing the
+    // pinned values would let a mid-loop eviction silently re-pin identical values in the same
+    // iteration, so both the pre- and post-recency-refresh maps would satisfy every assertion.
     resolvePinnedToolGating({ pinKey: "agent:active:main", embedded: false, sandboxed: false });
 
     // Cron runs mint per-run session keys, so a busy instance churns past the cap while a
     // long-lived conversation is hit every turn. Insertion-order eviction would drop that
     // conversation's pin and silently re-pin it from live values with no disagreement warning.
+    const pinnedActive = { embedded: false, sandboxed: false, clientCaps: undefined };
+    let driftHits = 0;
     for (let index = 0; index <= PIN_CAP; index += 1) {
       resolvePinnedToolGating({ pinKey: `agent:run:${index}`, embedded: true, sandboxed: true });
+      // Each drifting turn of the long-lived conversation has to win with the pinned snapshot and
+      // warn exactly once; eviction returns live values and swallows the warning.
       expect(
-        resolvePinnedToolGating({ pinKey: "agent:active:main", embedded: false, sandboxed: false }),
-      ).toEqual({ embedded: false, sandboxed: false, clientCaps: undefined });
+        resolvePinnedToolGating({ pinKey: "agent:active:main", embedded: true, sandboxed: true }),
+      ).toEqual(pinnedActive);
+      driftHits += 1;
+      expect(warnMock).toHaveBeenCalledTimes(driftHits);
     }
 
-    expect(warnMock).not.toHaveBeenCalled();
     // The repeatedly-hit pin survived the churn and still wins over live drift.
     expect(
       resolvePinnedToolGating({ pinKey: "agent:active:main", embedded: true, sandboxed: true }),
-    ).toEqual({ embedded: false, sandboxed: false, clientCaps: undefined });
-    expect(warnMock).toHaveBeenCalledOnce();
+    ).toEqual(pinnedActive);
+    expect(warnMock).toHaveBeenCalledTimes(driftHits + 1);
 
-    // The never-hit idle pin is the least-recently-used entry, so it is the one that got evicted
-    // and silently re-pins from live values.
+    // Cap-exercise guard plus LRU ordering: the never-hit idle pin is the oldest entry, so it is
+    // the one that got evicted and silently re-pins from live values with no warning. That
+    // eviction is only reachable once the churn really reaches MAX_TOOL_GATING_PINS, so if the
+    // production cap ever grows past this loop's reach the churn is a no-op and this assertion
+    // fails loudly instead of the whole test passing vacuously.
     expect(
       resolvePinnedToolGating({ pinKey: "agent:idle:main", embedded: true, sandboxed: true }),
     ).toEqual({ embedded: true, sandboxed: true, clientCaps: undefined });
-    expect(warnMock).toHaveBeenCalledOnce();
+    expect(warnMock).toHaveBeenCalledTimes(driftHits + 1);
   });
 
   it("keeps the snapshot when a session-id-free pin meets a session-id-bearing call", () => {
