@@ -231,13 +231,13 @@ export async function recoverEmbeddedRunAttempt(input: {
       }),
     };
   }
-  if (
-    !currentAttemptReplaySafe &&
-    !canContinueSettledMidTurnOverflow &&
-    !settledTransportDropAssistant
-  ) {
-    return { action: "proceed" };
-  }
+  // Replay-unsafe attempts outside the settled-continuation cases skip every
+  // recovery except overflow compaction: compaction never re-invokes the model,
+  // so a context-overflow turn that already used tools must not strand the
+  // session requiring a manual /compact. Only the retry after it can repeat a
+  // side effect, which is accepted deliberately.
+  const replayUnsafeOverflowOnly =
+    !currentAttemptReplaySafe && !canContinueSettledMidTurnOverflow && !settledTransportDropAssistant;
 
   const requestedSelection = shouldSwitchToLiveModel({
     cfg: params.config,
@@ -314,7 +314,8 @@ export async function recoverEmbeddedRunAttempt(input: {
     usageAccumulator: input.usageAccumulator,
   };
   if (
-    await recoverEmbeddedRunTimeout({
+    !replayUnsafeOverflowOnly &&
+    (await recoverEmbeddedRunTimeout({
       ...commonRecoveryInput,
       timedOut,
       signalOwnedInterruption,
@@ -322,7 +323,7 @@ export async function recoverEmbeddedRunAttempt(input: {
       timedOutDuringToolExecution,
       timedOutByRunBudget,
       lastRunPromptUsage: input.lastRunPromptUsage,
-    })
+    }))
   ) {
     return retry();
   }
@@ -356,6 +357,9 @@ export async function recoverEmbeddedRunAttempt(input: {
         finalPromptText: attempt.finalPromptText,
       }),
     };
+  }
+  if (replayUnsafeOverflowOnly) {
+    return { action: "proceed" };
   }
   const recoveryState = input.contextRecoveryState;
   if (
