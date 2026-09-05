@@ -165,7 +165,102 @@ export async function recoverEmbeddedRunAttempt(input: {
       }),
     };
   }
+  const runOverflowRecovery = (selection: {
+    provider: string;
+    model: string;
+    authProfileId?: string;
+    authProfileIdSource: "auto" | "user";
+  }) =>
+    recoverEmbeddedRunOverflow({
+      runParams: params,
+      state: input.contextRecoveryState,
+      contextEngine: input.contextEngine,
+      contextTokenBudget: runtime.contextTokenBudget,
+      genericCompactionRecoveryAllowed: preparedRuntime.genericCompactionRecoveryAllowed,
+      attempt,
+      toolResultPromptProjectionState: getEmbeddedSessionPromptState(params.sessionId).toolResults,
+      runtimeAuthPlan: runtimePlan.auth,
+      resolvedSessionKey: runInput.resolvedSessionKey,
+      sessionAgentId: input.sessionAgentId,
+      agentDir: runInput.agentDir,
+      workspaceDir: runInput.workspaceDir,
+      provider: selection.provider,
+      modelId: selection.model,
+      harnessRuntime: runtime.agentHarness.id,
+      thinkLevel: runtime.thinkLevel,
+      authProfileId: selection.authProfileId,
+      authProfileIdSource: selection.authProfileIdSource,
+      resolveContextEnginePluginId: input.resolveContextEnginePluginId,
+      buildRuntimeSettings: input.buildRuntimeSettings,
+      ...compactionRuntime,
+      getActiveSession: () => ({
+        id: sessionPromptState.sessionId,
+        file: sessionPromptState.sessionFile,
+        target: sessionPromptState.sessionTarget,
+      }),
+      armPostCompactionGuard: input.armPostCompactionGuard,
+      aborted,
+      signalOwnedInterruption,
+      promptError,
+      assistantErrorText,
+      assistantOverflowCandidate,
+      attemptCompactionCount,
+      prepareCurrentTranscriptRetry: sessionPromptState.continueFromCurrentTranscript,
+      prepareCompactedTranscriptRetry: sessionPromptState.prepareCompactedTranscriptRetry,
+    });
+  const buildOverflowSurfaceResult = (
+    overflowRecovery: Extract<
+      Awaited<ReturnType<typeof recoverEmbeddedRunOverflow>>,
+      { action: "surface" }
+    >,
+  ) => {
+    const replayInvalid = resolveReplayInvalidForAttempt();
+    setTerminalLifecycleMeta({ replayInvalid, livenessState: "blocked" });
+    return {
+      action: "complete" as const,
+      result: buildEmbeddedRunBlockedResult({
+        text: overflowRecovery.userText,
+        errorKind: overflowRecovery.kind,
+        errorMessage: overflowRecovery.errorText,
+        durationMs: Date.now() - runInput.startedAtMs,
+        agentMeta: buildErrorAgentMeta({
+          sessionId: sessionIdUsed,
+          sessionFile: sessionPromptState.sessionFile,
+          provider: preparedRuntime.provider,
+          model: preparedRuntime.model.id,
+          ...runtime.outerContextTokenMeta,
+          usageAccumulator: input.usageAccumulator,
+          lastRunPromptUsage: input.lastRunPromptUsage,
+          currentAttemptAssistant,
+        }),
+        attempt,
+        replayInvalid,
+        finalPromptText: attempt.finalPromptText,
+      }),
+    };
+  };
   if (!currentAttemptReplaySafe) {
+    // Compaction never re-invokes the model, so it's safe to run even when this
+    // attempt already produced side effects (tool calls, sent messages, cron
+    // adds, spawned sessions). Only the retry that follows repeats the prompt
+    // and could re-trigger those side effects if compaction succeeds — accepted
+    // deliberately so a context-overflow turn that already used tools doesn't
+    // strand the session requiring a manual /compact.
+    const replayUnsafeOverflowRecovery = await runOverflowRecovery({
+      provider: preparedRuntime.provider,
+      model: preparedRuntime.modelId,
+      authProfileId: runtime.lastProfileId,
+      authProfileIdSource:
+        runtime.lastProfileId && runtime.lastProfileId === preparedRuntime.lockedProfileId
+          ? "user"
+          : "auto",
+    });
+    if (replayUnsafeOverflowRecovery.action === "retry") {
+      return retry();
+    }
+    if (replayUnsafeOverflowRecovery.action === "surface") {
+      return buildOverflowSurfaceResult(replayUnsafeOverflowRecovery);
+    }
     return {
       action: "proceed",
       shouldSurfaceCodexCompletionTimeout:
@@ -251,45 +346,17 @@ export async function recoverEmbeddedRunAttempt(input: {
   ) {
     return retry();
   }
-  const overflowRecovery = await recoverEmbeddedRunOverflow({
-    ...commonRecoveryInput,
-    aborted,
-    signalOwnedInterruption,
-    promptError,
-    assistantErrorText,
-    assistantOverflowCandidate,
-    attemptCompactionCount,
-    prepareCurrentTranscriptRetry: sessionPromptState.continueFromCurrentTranscript,
-    prepareCompactedTranscriptRetry: sessionPromptState.prepareCompactedTranscriptRetry,
+  const overflowRecovery = await runOverflowRecovery({
+    provider: compactionSelection.provider,
+    model: compactionSelection.model,
+    authProfileId: compactionSelection.authProfileId,
+    authProfileIdSource: compactionSelection.authProfileIdSource,
   });
   if (overflowRecovery.action === "retry") {
     return retry();
   }
   if (overflowRecovery.action === "surface") {
-    const replayInvalid = resolveReplayInvalidForAttempt();
-    setTerminalLifecycleMeta({ replayInvalid, livenessState: "blocked" });
-    return {
-      action: "complete",
-      result: buildEmbeddedRunBlockedResult({
-        text: overflowRecovery.userText,
-        errorKind: overflowRecovery.kind,
-        errorMessage: overflowRecovery.errorText,
-        durationMs: Date.now() - runInput.startedAtMs,
-        agentMeta: buildErrorAgentMeta({
-          sessionId: sessionIdUsed,
-          sessionFile: sessionPromptState.sessionFile,
-          provider: preparedRuntime.provider,
-          model: preparedRuntime.model.id,
-          ...runtime.outerContextTokenMeta,
-          usageAccumulator: input.usageAccumulator,
-          lastRunPromptUsage: input.lastRunPromptUsage,
-          currentAttemptAssistant,
-        }),
-        attempt,
-        replayInvalid,
-        finalPromptText: attempt.finalPromptText,
-      }),
-    };
+    return buildOverflowSurfaceResult(overflowRecovery);
   }
   const hasRecoverableCodexAppServerTimeoutOutcome = Boolean(
     attempt.codexAppServerFailure && attempt.promptTimeoutOutcome,
