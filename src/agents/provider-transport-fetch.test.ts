@@ -677,12 +677,42 @@ describe("buildGuardedModelFetch", () => {
 
   it("ignores non-positive model request timeout metadata", async () => {
     const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+    // Non-local baseUrl: isolates "an invalid explicit override is ignored" from the
+    // local-provider default-floor fallback covered separately below.
     const model = {
       id: "deepseek-v4-flash",
       provider: "ds4",
       api: "openai-completions",
-      baseUrl: "http://127.0.0.1:18000/v1",
+      baseUrl: "https://api.ds4.example.com/v1",
       requestTimeoutMs: -1,
+    } as unknown as Model<"openai-completions">;
+
+    try {
+      const fetcher = buildGuardedModelFetch(model);
+      const response = await fetcher("https://api.ds4.example.com/v1/chat/completions", {
+        method: "POST",
+      });
+      await response.text();
+
+      expect(timeoutSpy).not.toHaveBeenCalled();
+      expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(model, undefined, undefined);
+      expect(latestGuardedFetchParams().timeoutMs).toBeUndefined();
+    } finally {
+      timeoutSpy.mockRestore();
+    }
+  });
+
+  it("defaults unconfigured local-provider requests to the local request-timeout floor", async () => {
+    const timeoutController = new AbortController();
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
+    // No requestTimeoutMs at all: the vendored `openai` SDK client would otherwise fall
+    // back to its own built-in 10-minute default, silently overriding this project's
+    // much larger local-provider timeouts and aborting slow local completions mid-stream.
+    const model = {
+      id: "qwen3.8-27b-q8",
+      provider: "node-lite",
+      api: "openai-completions",
+      baseUrl: "http://127.0.0.1:18000/v1",
     } as unknown as Model<"openai-completions">;
 
     try {
@@ -692,9 +722,8 @@ describe("buildGuardedModelFetch", () => {
       });
       await response.text();
 
-      expect(timeoutSpy).not.toHaveBeenCalled();
-      expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(model, undefined, undefined);
-      expect(latestGuardedFetchParams().timeoutMs).toBeUndefined();
+      expect(timeoutSpy).toHaveBeenCalledWith(36_000_000);
+      expect(latestGuardedFetchParams().timeoutMs).toBe(36_000_000);
     } finally {
       timeoutSpy.mockRestore();
     }

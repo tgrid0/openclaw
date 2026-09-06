@@ -56,7 +56,7 @@ type IdleTimeoutProviderConfig = {
  *    classification keys on `URL.hostname` so resolution would have to happen
  *    here, and adding sync/async DNS to the watchdog hot path is disproportionate.
  */
-function isLocalProviderBaseUrl(baseUrl: string): boolean {
+export function isLocalProviderBaseUrl(baseUrl: string): boolean {
   let host: string;
   try {
     host = new URL(baseUrl).hostname.toLowerCase();
