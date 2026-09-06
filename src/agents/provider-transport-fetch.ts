@@ -39,6 +39,7 @@ import {
   SECRET_SENTINEL_PATTERN,
   swapSecretSentinelsInText,
 } from "../secrets/sentinel.js";
+import { isLocalProviderBaseUrl } from "./embedded-agent-runner/run/llm-idle-timeout.js";
 import { ProviderHttpError, readResponseTextLimited } from "./provider-http-errors.js";
 import {
   ensureModelProviderLocalService,
@@ -55,6 +56,14 @@ import { getProviderTransportDispatcherPool } from "./provider-transport-dispatc
 
 const DEFAULT_MAX_SDK_RETRY_WAIT_SECONDS = 60;
 const OPENAI_SDK_STREAM_CONTENT_SNIFF_BYTES = 2 * 1024;
+// Matches the local-provider floor in llm-idle-timeout.ts (LOCAL_LLM_FIRST_EVENT_TIMEOUT_MS /
+// SELF_HOSTED_LLM_IDLE_TIMEOUT_MS). Without an explicit fallback here, an unconfigured
+// requestTimeoutMs resolves to `undefined`, which for the guarded-fetch AbortSignal means
+// "no timeout" but for the vendored `openai` SDK client's own `timeout` option means
+// "use the SDK's built-in 10-minute default" (see openai/core.js DEFAULT_TIMEOUT) — a hard
+// per-request deadline that silently aborts slow local/self-hosted completions mid-stream,
+// undermining the generous local-provider timeouts this file's siblings already apply.
+const DEFAULT_LOCAL_MODEL_REQUEST_TIMEOUT_MS = 36_000_000;
 const log = createSubsystemLogger("provider-transport-fetch");
 
 /** Max bytes for an entire JSON body synthesized into SSE frames. Prevents OOM
@@ -615,9 +624,13 @@ export function resolveModelRequestTimeoutMs(
       : undefined;
   }
   const modelTimeoutMs = (model as { requestTimeoutMs?: unknown }).requestTimeoutMs;
-  return typeof modelTimeoutMs === "number" && Number.isFinite(modelTimeoutMs) && modelTimeoutMs > 0
-    ? clampTimerTimeoutMs(modelTimeoutMs)
-    : undefined;
+  if (typeof modelTimeoutMs === "number" && Number.isFinite(modelTimeoutMs) && modelTimeoutMs > 0) {
+    return clampTimerTimeoutMs(modelTimeoutMs);
+  }
+  if (typeof model.baseUrl === "string" && isLocalProviderBaseUrl(model.baseUrl)) {
+    return clampTimerTimeoutMs(DEFAULT_LOCAL_MODEL_REQUEST_TIMEOUT_MS);
+  }
+  return undefined;
 }
 
 function buildModelRequestSignal(
