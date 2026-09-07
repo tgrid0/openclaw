@@ -190,6 +190,7 @@ export async function executePreparedCompactionSession(runtime: PreparedCompacti
           workspaceDir: effectiveWorkspace,
         }),
         contextTokenBudget,
+        outputReserveTokens: effectiveModel.maxTokens,
       });
       // Sets compaction/pruning runtime state and returns extension factories
       // that must be passed to the resource loader for the safeguard to be active.
@@ -221,6 +222,7 @@ export async function executePreparedCompactionSession(runtime: PreparedCompacti
         settingsManager,
         cfg: params.config,
         contextTokenBudget,
+        outputReserveTokens: effectiveModel.maxTokens,
       });
       // contextEngineInfo is intentionally omitted: this guard runs inside the
       // compaction LLM session, which is not the user-facing agent session and

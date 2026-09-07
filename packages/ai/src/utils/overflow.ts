@@ -250,3 +250,20 @@ export function isContextOverflow(message: AssistantMessage, contextWindow?: num
 
   return false;
 }
+
+/**
+ * True when a `length` turn fell short of the model's configured output cap: the prompt
+ * starved the reply rather than the model filling its budget. Case 3 above misses this
+ * whenever output is non-zero, so the run would otherwise end with no error/continuation.
+ * Providers that omit or under-report usage also match; call sites bound recovery.
+ */
+export function isStarvedOutputLengthTruncation(
+  message: AssistantMessage,
+  desiredMaxOutputTokens: number,
+): boolean {
+  return (
+    message.stopReason === "length" &&
+    desiredMaxOutputTokens > 0 &&
+    message.usage.output < desiredMaxOutputTokens
+  );
+}

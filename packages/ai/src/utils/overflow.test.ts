@@ -3,6 +3,7 @@ import type { AssistantMessage } from "../types.js";
 import {
   isConfiguredContextSizeOverflowError,
   isContextOverflow,
+  isStarvedOutputLengthTruncation,
   matchesContextOverflowMessage,
 } from "./overflow.js";
 
@@ -143,5 +144,56 @@ describe("usage-based overflow", () => {
     // tokens are prompt tokens too, and providers that report them separately keep
     // them out of `input`. Omitting the bucket silently under-counts the context.
     expect(isContextOverflow(successfulMessage(), 1_150_000)).toBe(true);
+  });
+});
+
+function lengthTruncatedMessage(output: number, input: number): AssistantMessage {
+  return {
+    ...errorMessage(""),
+    usage: {
+      input,
+      output,
+      cacheRead: 0,
+      cacheWrite: 0,
+      totalTokens: input + output,
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    },
+    stopReason: "length",
+    errorMessage: undefined,
+  };
+}
+
+describe("starved output budget truncation", () => {
+  // Observed on a local llama.cpp model behind a LiteLLM proxy: the completions
+  // transport clamped max_completion_tokens down to 460 and 1 token while the
+  // model's configured output cap was 65_535, so the turn ended with no answer
+  // and no compaction. The prompt filled 89.8%/94.8% of a 262_144 window, which
+  // is below the 99% `isContextOverflow` Case 3 bar, and output was non-zero.
+  it.each([460, 1])(
+    "flags a %d-token length turn against the configured 65_535 output cap",
+    (output) => {
+      expect(isStarvedOutputLengthTruncation(lengthTruncatedMessage(output, 248_567), 65_535)).toBe(
+        true,
+      );
+    },
+  );
+
+  it("does not flag a completion that consumed the whole configured output budget", () => {
+    expect(isStarvedOutputLengthTruncation(lengthTruncatedMessage(65_535, 12_000), 65_535)).toBe(
+      false,
+    );
+  });
+
+  it("does not flag a turn that finished cleanly", () => {
+    expect(
+      isStarvedOutputLengthTruncation(
+        { ...lengthTruncatedMessage(1, 248_567), stopReason: "stop" },
+        65_535,
+      ),
+    ).toBe(false);
+  });
+
+  it("does not flag truncation when the configured output budget is unknown", () => {
+    expect(isStarvedOutputLengthTruncation(lengthTruncatedMessage(1, 248_567), 0)).toBe(false);
   });
 });

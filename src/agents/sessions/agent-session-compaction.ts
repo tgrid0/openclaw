@@ -1,4 +1,4 @@
-import { isContextOverflow } from "@openclaw/ai/internal/runtime";
+import { isContextOverflow, isStarvedOutputLengthTruncation } from "@openclaw/ai/internal/runtime";
 import { normalizeOptionalString } from "@openclaw/normalization-core/string-coerce";
 import { capCompactionSummary } from "../../../packages/agent-core/src/harness/compaction/compaction.js";
 import { InvalidSummaryOutputError } from "../../../packages/agent-core/src/harness/types.js";
@@ -394,10 +394,13 @@ export abstract class AgentSessionCompaction extends AgentSessionInspection {
 
     // Case 1: Overflow - an unsuccessful response needs compact-and-retry recovery.
     // Successful high-usage responses fall through to threshold maintenance below.
+    // A `length` turn that fell short of the configured output cap is the same failure
+    // mode without a provider error: the prompt left the transport no room to answer.
     if (
       sameModel &&
       (assistantMessage.stopReason === "error" || assistantMessage.stopReason === "length") &&
-      isContextOverflow(assistantMessage, contextWindow)
+      (isContextOverflow(assistantMessage, contextWindow) ||
+        isStarvedOutputLengthTruncation(assistantMessage, this.model?.maxTokens ?? 0))
     ) {
       if (this.contextOverflowRecoveryOwner === "caller") {
         return false;

@@ -1,4 +1,4 @@
-import { isContextOverflow } from "@openclaw/ai/internal/runtime";
+import { isContextOverflow, isStarvedOutputLengthTruncation } from "@openclaw/ai/internal/runtime";
 import { isProviderRefusalAssistantError } from "@openclaw/llm-core/diagnostics";
 import { truncateUtf16Safe } from "@openclaw/normalization-core/utf16-slice";
 import { formatErrorMessage } from "../../../infra/errors.js";
@@ -64,6 +64,8 @@ export async function recoverEmbeddedRunOverflow(
     promptError: unknown;
     assistantErrorText?: string;
     assistantOverflowCandidate?: AssistantMessage;
+    /** The model's configured output cap; never the per-request clamped wire value. */
+    desiredMaxOutputTokens: number;
     toolResultPromptProjectionState: ToolResultPromptProjectionState;
     attemptCompactionCount: number;
     prepareCurrentTranscriptRetry: () => void;
@@ -86,16 +88,27 @@ export async function recoverEmbeddedRunOverflow(
           if (isProviderRefusalAssistantError(input.assistantOverflowCandidate)) {
             return null;
           }
-          if (
-            input.assistantOverflowCandidate &&
-            input.contextTokenBudget !== undefined &&
-            isContextOverflow(input.assistantOverflowCandidate, input.contextTokenBudget)
-          ) {
-            return {
-              text:
-                input.assistantOverflowCandidate.errorMessage?.trim() || "Context window exceeded",
-              source: "assistantError" as const,
-            };
+          if (input.assistantOverflowCandidate) {
+            const reportedOverflow =
+              input.contextTokenBudget !== undefined &&
+              isContextOverflow(input.assistantOverflowCandidate, input.contextTokenBudget);
+            // A starved output budget is not a provider-reported overflow: the transport
+            // shrank max_completion_tokens to fit the prompt, so no error text exists and
+            // the turn just ends with a truncated reply.
+            const starvedOutput = isStarvedOutputLengthTruncation(
+              input.assistantOverflowCandidate,
+              input.desiredMaxOutputTokens,
+            );
+            if (reportedOverflow || starvedOutput) {
+              return {
+                text:
+                  input.assistantOverflowCandidate.errorMessage?.trim() ||
+                  (starvedOutput
+                    ? "Output budget exhausted before the response completed"
+                    : "Context window exceeded"),
+                source: "assistantError" as const,
+              };
+            }
           }
           if (input.assistantErrorText && isLikelyContextOverflowError(input.assistantErrorText)) {
             return { text: input.assistantErrorText, source: "assistantError" as const };

@@ -97,6 +97,63 @@ describe("applyAgentCompactionSettingsFromConfig", () => {
     });
   });
 
+  it("reserves the model output cap so a full capped completion still fits the window", () => {
+    // The completions transport caps max_completion_tokens at the remaining window
+    // for proxy-like endpoints. With reserveTokens stuck at the 20k floor, the prompt
+    // may reach ~95% of the window and the output budget collapses to a few tokens.
+    // Reserving the configured output cap keeps prompt + one capped completion inside
+    // contextWindow, so the transport never has to starve the reply.
+    const settingsManager = SettingsManager.inMemory();
+
+    const result = applyAgentCompactionSettingsFromConfig({
+      settingsManager,
+      contextTokenBudget: 262_144,
+      outputReserveTokens: 65_535,
+    });
+
+    expect(result.compaction.reserveTokens).toBe(65_535);
+    expect(
+      shouldCompact(196_609, 262_144, {
+        enabled: true,
+        reserveTokens: result.compaction.reserveTokens,
+        keepRecentTokens: result.compaction.keepRecentTokens,
+      }),
+    ).toBe(false);
+    expect(
+      shouldCompact(196_610, 262_144, {
+        enabled: true,
+        reserveTokens: result.compaction.reserveTokens,
+        keepRecentTokens: result.compaction.keepRecentTokens,
+      }),
+    ).toBe(true);
+  });
+
+  it.each([
+    // An output cap below the default reserve floor must not lower it.
+    [
+      "smaller than the default floor",
+      262_144,
+      4_096,
+      DEFAULT_AGENT_COMPACTION_RESERVE_TOKENS_FLOOR,
+    ],
+    // 16k window: MIN_PROMPT_BUDGET_TOKENS floors the prompt budget at 8k, so the
+    // output cap may not consume the reserve even though it is larger.
+    ["larger than a small window allows", 16_000, 65_535, 8_000],
+  ] as const)(
+    "keeps the reserve floor when the output cap is %s",
+    (_label, budget, outputReserve, expected) => {
+      const settingsManager = SettingsManager.inMemory();
+
+      const result = applyAgentCompactionSettingsFromConfig({
+        settingsManager,
+        contextTokenBudget: budget,
+        outputReserveTokens: outputReserve,
+      });
+
+      expect(result.compaction.reserveTokens).toBe(expected);
+    },
+  );
+
   it("can restore reserveTokens after a simulated resource loader reload drops them below floor", () => {
     let reserve = 16_384;
     const keep = 20_000;
