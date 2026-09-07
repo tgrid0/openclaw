@@ -190,6 +190,10 @@ export async function recoverEmbeddedRunAttempt(input: {
       thinkLevel: runtime.thinkLevel,
       authProfileId: selection.authProfileId,
       authProfileIdSource: selection.authProfileIdSource,
+      // The operator's configured output cap, not the transport-clamped wire value:
+      // a `length` turn under it means the prompt starved the reply, not that the
+      // model filled its budget.
+      desiredMaxOutputTokens: preparedRuntime.model.maxTokens,
       resolveContextEnginePluginId: input.resolveContextEnginePluginId,
       buildRuntimeSettings: input.buildRuntimeSettings,
       ...compactionRuntime,

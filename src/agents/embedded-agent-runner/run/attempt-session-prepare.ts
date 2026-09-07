@@ -96,6 +96,7 @@ export async function prepareEmbeddedAttemptAgentSession(input: {
     cfg: attempt.config,
     pluginMetadataSnapshot: input.getCurrentAttemptPluginMetadataSnapshot(),
     contextTokenBudget: attempt.contextTokenBudget,
+    outputReserveTokens: attempt.model.maxTokens,
   });
   const autoCompactionGuardArgs = {
     settingsManager,
@@ -135,6 +136,7 @@ export async function prepareEmbeddedAttemptAgentSession(input: {
     settingsManager,
     cfg: attempt.config,
     contextTokenBudget: attempt.contextTokenBudget,
+    outputReserveTokens: attempt.model.maxTokens,
   });
   applyAgentAutoCompactionGuard(autoCompactionGuardArgs);
   input.markStage("session-resource-loader");

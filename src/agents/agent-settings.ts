@@ -34,6 +34,12 @@ export function applyAgentCompactionSettingsFromConfig(params: {
   cfg?: OpenClawConfig;
   /** When known, the resolved context window budget for the current model. */
   contextTokenBudget?: number;
+  /**
+   * The model's configured output cap. The prompt budget must leave room for one full
+   * capped completion, otherwise the transport clamps max completion tokens down to a
+   * few tokens and the turn ends truncated with no error.
+   */
+  outputReserveTokens?: number;
 }): {
   didOverride: boolean;
   compaction: { reserveTokens: number; keepRecentTokens: number };
@@ -46,7 +52,13 @@ export function applyAgentCompactionSettingsFromConfig(params: {
   const configuredEnabled = compactionCfg?.enabled;
 
   const configuredKeepRecentTokens = toPositiveInt(compactionCfg?.keepRecentTokens);
-  let reserveTokensFloor = DEFAULT_AGENT_COMPACTION_RESERVE_TOKENS_FLOOR;
+  // The reserve must cover both the compaction headroom and one full capped
+  // completion; the existing small-window cap below keeps a large cap from
+  // starving the prompt budget.
+  let reserveTokensFloor = Math.max(
+    DEFAULT_AGENT_COMPACTION_RESERVE_TOKENS_FLOOR,
+    toPositiveInt(params.outputReserveTokens) ?? 0,
+  );
   let maxReserveTokens: number | undefined;
 
   // Cap the floor to a safe fraction of the context window so that
