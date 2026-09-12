@@ -15,6 +15,7 @@ import {
   registerMemoryPromptPreparation,
   registerMemoryPromptSupplement,
   registerTestMemoryPromptBuilder,
+  resetMemoryPromptSectionPinsForTests,
   resolveMemoryFlushPlan,
   type MemoryPluginPublicArtifact,
 } from "./memory-state.test-fixtures.js";
@@ -70,6 +71,7 @@ function registerMemoryState(params: {
 describe("memory plugin state", () => {
   afterEach(() => {
     clearMemoryPluginState();
+    resetMemoryPromptSectionPinsForTests();
   });
 
   it("returns empty defaults when no memory plugin state is registered", () => {
@@ -350,7 +352,32 @@ describe("memory plugin state", () => {
     expect(buildMemoryPromptSection({ availableTools: new Set() })).toEqual(["primary", "valid"]);
   });
 
-  it("prepares immutable prompt lines once per run before synchronous assembly", async () => {
+  it("prepares immutable, frozen prompt lines before synchronous assembly", async () => {
+    const prepare = vi.fn(async () => ["compiled once"]);
+    registerMemoryPromptPreparation("memory-wiki", prepare);
+    const params = {
+      availableTools: new Set(["wiki_search"]),
+      agentId: "main",
+      agentSessionKey: "agent:main:main",
+    };
+
+    const prepared = await prepareMemoryPromptSection(params);
+
+    expect(Object.isFrozen(prepared)).toBe(true);
+    expect(Object.isFrozen(prepared.context)).toBe(true);
+    expect(Object.isFrozen(prepared.context.availableTools)).toBe(true);
+    expect(Object.isFrozen(prepared.lines)).toBe(true);
+    expect(buildMemoryPromptSection(params, prepared)).toEqual(["compiled once"]);
+    expect(buildMemoryPromptSection(params, prepared)).toEqual(["compiled once"]);
+    expect(prepare).toHaveBeenCalledTimes(1);
+  });
+
+  // Regression test for the prompt-cache-miss bug: prepareMemoryPromptSection used to recompute
+  // on every call, so a memory write between two runs of the *same* durable session (e.g. a
+  // continuation turn triggered by a webhook, hours later) changed the prepared lines' byte
+  // content and busted the LLM provider's prompt-cache match on a turn that otherwise hadn't
+  // changed. See memory-prompt-section-pin.ts.
+  it("reuses the pinned snapshot on a later run of the same session instead of recomputing", async () => {
     let compiledLines = ["compiled before"];
     const prepare = vi.fn(async () => [...compiledLines]);
     registerMemoryPromptPreparation("memory-wiki", prepare);
@@ -360,19 +387,81 @@ describe("memory plugin state", () => {
       agentSessionKey: "agent:main:main",
     };
 
-    const preparedBefore = await prepareMemoryPromptSection(params);
+    const first = await prepareMemoryPromptSection(params);
+    // Simulates a memory write that happened after the first run finished.
     compiledLines = ["compiled after"];
+    const second = await prepareMemoryPromptSection(params);
 
-    expect(Object.isFrozen(preparedBefore)).toBe(true);
-    expect(Object.isFrozen(preparedBefore.context)).toBe(true);
-    expect(Object.isFrozen(preparedBefore.context.availableTools)).toBe(true);
-    expect(Object.isFrozen(preparedBefore.lines)).toBe(true);
-    expect(buildMemoryPromptSection(params, preparedBefore)).toEqual(["compiled before"]);
-    expect(buildMemoryPromptSection(params, preparedBefore)).toEqual(["compiled before"]);
+    // Same session, same context: the write's effect is deferred to the *next* genuinely new
+    // session rather than immediately reshaping a session already in progress, per this repo's
+    // stated policy (AGENTS.md: "Prompt-state mutations ... default to deferred cache
+    // invalidation — effect next session").
+    expect(second).toBe(first);
+    expect(buildMemoryPromptSection(params, second)).toEqual(["compiled before"]);
     expect(prepare).toHaveBeenCalledTimes(1);
+  });
 
-    const preparedAfter = await prepareMemoryPromptSection(params);
-    expect(buildMemoryPromptSection(params, preparedAfter)).toEqual(["compiled after"]);
+  it("recomputes for a different session even when every other param matches", async () => {
+    let compiledLines = ["compiled before"];
+    const prepare = vi.fn(async () => [...compiledLines]);
+    registerMemoryPromptPreparation("memory-wiki", prepare);
+    const baseParams = { availableTools: new Set(["wiki_search"]), agentId: "main" };
+
+    const first = await prepareMemoryPromptSection({
+      ...baseParams,
+      agentSessionKey: "agent:main:session-1",
+    });
+    compiledLines = ["compiled after"];
+    const second = await prepareMemoryPromptSection({
+      ...baseParams,
+      agentSessionKey: "agent:main:session-2",
+    });
+
+    expect(second).not.toBe(first);
+    expect(
+      buildMemoryPromptSection({ ...baseParams, agentSessionKey: "agent:main:session-2" }, second),
+    ).toEqual(["compiled after"]);
+    expect(prepare).toHaveBeenCalledTimes(2);
+  });
+
+  it("recomputes when the run's own context changed, even for the same session key", async () => {
+    let compiledLines = ["compiled before"];
+    const prepare = vi.fn(async () => [...compiledLines]);
+    registerMemoryPromptPreparation("memory-wiki", prepare);
+
+    const first = await prepareMemoryPromptSection({
+      availableTools: new Set(["wiki_search"]),
+      agentId: "main",
+      agentSessionKey: "agent:main:main",
+    });
+    compiledLines = ["compiled after"];
+    // Available tools genuinely changed since the pinned run. Reusing the stale pin here would
+    // later make buildMemoryPromptSection throw ("prepared memory prompt section does not match
+    // the current run") instead of quietly doing the right thing, so this must recompute.
+    const second = await prepareMemoryPromptSection({
+      availableTools: new Set(["wiki_search", "memory_search"]),
+      agentId: "main",
+      agentSessionKey: "agent:main:main",
+    });
+
+    expect(second).not.toBe(first);
+    expect(prepare).toHaveBeenCalledTimes(2);
+  });
+
+  // Calls with no agentSessionKey are never tracked (matches tool-gating-pin's identical rule),
+  // so a caller that cannot supply one (or intentionally opts out) always sees a fresh compute.
+  it("never pins across calls that omit agentSessionKey", async () => {
+    let compiledLines = ["compiled before"];
+    const prepare = vi.fn(async () => [...compiledLines]);
+    registerMemoryPromptPreparation("memory-wiki", prepare);
+    const params = { availableTools: new Set(["wiki_search"]), agentId: "main" };
+
+    const first = await prepareMemoryPromptSection(params);
+    compiledLines = ["compiled after"];
+    const second = await prepareMemoryPromptSection(params);
+
+    expect(second).not.toBe(first);
+    expect(buildMemoryPromptSection(params, second)).toEqual(["compiled after"]);
     expect(prepare).toHaveBeenCalledTimes(2);
   });
 

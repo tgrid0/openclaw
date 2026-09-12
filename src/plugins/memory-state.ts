@@ -4,6 +4,10 @@ import { filterStringEntries } from "@openclaw/normalization-core/string-normali
 import type { OpenClawConfig } from "../config/types.openclaw.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { normalizePluginsConfig, resolveEffectivePluginActivationState } from "./config-state.js";
+import {
+  getPinnedMemoryPromptSection,
+  setPinnedMemoryPromptSection,
+} from "./memory-prompt-section-pin.js";
 import type {
   MemoryCorpusSupplement,
   MemoryCorpusSupplementRegistration,
@@ -23,6 +27,8 @@ import type { PluginRegistry } from "./registry-types.js";
 import { requireActivePluginRegistry, resolveDirectPluginRegistrationOwner } from "./runtime.js";
 
 const log = createSubsystemLogger("plugins/memory-state");
+
+export { resetMemoryPromptSectionPinsForTests } from "./memory-prompt-section-pin.js";
 
 export type {
   MemoryCorpusSearchResult,
@@ -256,12 +262,27 @@ function preparedMemoryPromptContextMatches(
   );
 }
 
-/** Prepare one immutable memory prompt snapshot for a run. */
+/**
+ * Prepare one immutable memory prompt snapshot for a run.
+ *
+ * Reuses the pinned snapshot from a prior run of the same durable session
+ * (params.agentSessionKey) when the run's context still matches, instead of
+ * recomputing — see memory-prompt-section-pin.ts for why. A missing
+ * agentSessionKey, a first-seen session, or a context change (available
+ * tools, citations mode, sandboxed) all fall through to a fresh compute,
+ * which is then pinned for the next run to potentially reuse.
+ */
 export async function prepareMemoryPromptSection(
   params: MemoryPromptSectionParams,
 ): Promise<PreparedMemoryPromptSection> {
   const runParams = cloneMemoryPromptSectionParams(params);
   const context = snapshotMemoryPromptContext(runParams);
+
+  const pinned = getPinnedMemoryPromptSection(runParams.agentSessionKey, context);
+  if (pinned) {
+    return pinned;
+  }
+
   const synchronous = buildSynchronousMemoryPromptSection(
     cloneMemoryPromptSectionParams(runParams),
   );
@@ -285,6 +306,7 @@ export async function prepareMemoryPromptSection(
     lines,
   });
   preparedMemoryPromptSections.add(prepared);
+  setPinnedMemoryPromptSection(runParams.agentSessionKey, prepared);
   return prepared;
 }
 
