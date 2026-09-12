@@ -1367,7 +1367,7 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
                   ...llmSummaryParams,
                   messages: pruned.droppedMessagesList,
                   maxChunkTokens: droppedMaxChunkTokens,
-                  customInstructions: structuredInstructions,
+                  formatContract: structuredInstructions,
                   previousSummary: preparation.previousSummary,
                 });
               } catch (droppedError) {
@@ -1429,7 +1429,7 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
                   ...llmSummaryParams,
                   messages: messagesToSummarize,
                   maxChunkTokens,
-                  customInstructions: currentInstructions,
+                  formatContract: currentInstructions,
                   previousSummary: effectivePreviousSummary,
                 })
               : buildStructuredFallbackSummary(effectivePreviousSummary);
@@ -1439,7 +1439,7 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
               ...llmSummaryParams,
               messages: turnPrefixMessages,
               maxChunkTokens,
-              customInstructions: `${TURN_PREFIX_INSTRUCTIONS}\n\nAdditional requirements:\n\n${currentInstructions}`,
+              formatContract: `${TURN_PREFIX_INSTRUCTIONS}\n\nAdditional requirements:\n\n${currentInstructions}`,
               previousSummary: undefined,
             });
             splitTurnSectionLocal = formatGeneratedSplitTurnSection(prefixSummary, () => {

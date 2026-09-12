@@ -629,12 +629,19 @@ export async function generateSummary(
   thinkingLevel?: ThinkingLevel,
   streamFn?: StreamFn,
   runtime?: AgentCoreCompletionRuntimeDeps,
+  // A caller-owned structured contract (e.g. compaction-safeguard's required-sections
+  // template) replaces the default Goal/Progress/Next-Steps checkpoint format instead of
+  // stacking under it. Two competing "use this EXACT format" directives in one prompt is
+  // how weaker models silently drop the caller's required sections (see the safeguard's
+  // own quality-guard failures) — the caller's contract must own formatting outright.
+  formatContract?: string,
 ): Promise<Result<string, CompactionError>> {
   const maxTokens = Math.min(
     Math.floor(0.8 * reserveTokens),
     model.maxTokens > 0 ? model.maxTokens : Number.POSITIVE_INFINITY,
   );
-  let basePrompt = previousSummary ? UPDATE_SUMMARIZATION_PROMPT : SUMMARIZATION_PROMPT;
+  let basePrompt =
+    formatContract ?? (previousSummary ? UPDATE_SUMMARIZATION_PROMPT : SUMMARIZATION_PROMPT);
   if (customInstructions) {
     basePrompt = `${basePrompt}\n\nAdditional focus: ${customInstructions}`;
   }

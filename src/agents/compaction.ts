@@ -81,6 +81,9 @@ type CompactionSummaryParams = {
   maxChunkTokens: number;
   contextWindow: number;
   customInstructions?: string;
+  // Owns formatting outright instead of stacking under the default checkpoint template;
+  // see generateSummary's formatContract parameter for why the two must not both apply.
+  formatContract?: string;
   summarizationInstructions?: CompactionSummarizationInstructions;
   previousSummary?: string;
   thinkingLevel?: ThinkingLevel;
@@ -124,10 +127,17 @@ async function summarizeChunks(params: CompactionSummaryParams): Promise<string>
     signal: params.signal,
   });
   let summary = params.previousSummary;
-  const effectiveInstructions = buildCompactionSummarizationInstructions(
-    params.customInstructions,
-    params.summarizationInstructions,
-  );
+  // A caller-owned format contract already carries its own identifier-preservation
+  // wording; skip the generic prefix in that case (it would otherwise sit ahead of the
+  // contract as a second, redundant identifier directive) but still forward any raw
+  // customInstructions (e.g. stage-merge guidance) so generateSummary can layer it
+  // under the contract instead of the default checkpoint template.
+  const effectiveInstructions = params.formatContract
+    ? params.customInstructions
+    : buildCompactionSummarizationInstructions(
+        params.customInstructions,
+        params.summarizationInstructions,
+      );
   for (const [completedChunks, chunk] of chunks.entries()) {
     try {
       summary = await retryAsync(
@@ -143,6 +153,7 @@ async function summarizeChunks(params: CompactionSummaryParams): Promise<string>
             summary,
             params.thinkingLevel,
             params.streamFn,
+            params.formatContract,
           ),
         {
           attempts: 3,

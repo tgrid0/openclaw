@@ -632,7 +632,9 @@ describe("compaction-safeguard summary budgets", () => {
 
     expect(capped.length).toBeLessThanOrEqual(MAX_COMPACTION_SUMMARY_CHARS / 4);
     expect(capped).toContain("## Exact identifiers");
-    expect(capped).toContain("abcd1234ef567890, /var/log/openclaw/session-72.log, 192.168.1.73:8484");
+    expect(capped).toContain(
+      "abcd1234ef567890, /var/log/openclaw/session-72.log, 192.168.1.73:8484",
+    );
     expect(capped).toContain(SUMMARY_TRUNCATED_MARKER.trim());
   });
 
@@ -1737,11 +1739,11 @@ describe("compaction-safeguard recent-turn preservation", () => {
     expect(result.compaction?.firstKeptEntryId).toBe("entry-1");
     expect(mockSummarizeInStages).toHaveBeenCalledTimes(2);
     const droppedCall = requireRecord(mockCallArg(mockSummarizeInStages));
-    expect(droppedCall?.customInstructions).toContain(
+    expect(droppedCall?.formatContract).toContain(
       "Produce a compact, factual summary with these exact section headings:",
     );
-    expect(droppedCall?.customInstructions).toContain("## Decisions");
-    expect(droppedCall?.customInstructions).toContain("Keep security caveats.");
+    expect(droppedCall?.formatContract).toContain("## Decisions");
+    expect(droppedCall?.formatContract).toContain("Keep security caveats.");
     const mainCall = requireRecord(mockCallArg(mockSummarizeInStages, 1));
     expect(JSON.stringify(mainCall?.messages)).toContain("dropped history summary");
     expect(messagesToSummarize).toStrictEqual(transcriptBefore);
@@ -2211,8 +2213,8 @@ describe("compaction-safeguard recent-turn preservation", () => {
     expect(expectCompactionResult(result).summary).toBe(validRetry);
     expect(mockSummarizeInStages).toHaveBeenCalledTimes(2);
     const retry = requireRecord(mockCallArg(mockSummarizeInStages, 1));
-    expect(retry.customInstructions).toContain("Quality check feedback");
-    expect(retry.customInstructions).toContain("complete summary body within 16000 UTF-16");
+    expect(retry.formatContract).toContain("Quality check feedback");
+    expect(retry.formatContract).toContain("complete summary body within 16000 UTF-16");
   });
 
   it("propagates caller abort during corrective generation", async () => {
@@ -2418,10 +2420,10 @@ describe("compaction-safeguard recent-turn preservation", () => {
     expect(firstAudit.structuralSummary).toBe("invalid generated body");
     expect(firstAudit.summary).toContain(preservedUserText);
     const secondCall = mockCallArg(mockSummarizeInStages, 1) as {
-      customInstructions?: string;
+      formatContract?: string;
     };
-    expect(secondCall.customInstructions).toContain("Quality check feedback");
-    expect(secondCall.customInstructions).toContain("missing_section:## Decisions");
+    expect(secondCall.formatContract).toContain("Quality check feedback");
+    expect(secondCall.formatContract).toContain("missing_section:## Decisions");
     expect(result.compaction?.summary).toContain("## Decisions");
   });
 
@@ -2576,7 +2578,7 @@ describe("compaction-safeguard recent-turn preservation", () => {
 
     expect(result).toEqual({ cancel: true });
     expect(mockSummarizeInStages).toHaveBeenCalledTimes(3);
-    expect(requireRecord(mockCallArg(mockSummarizeInStages, 1)).customInstructions).toContain(
+    expect(requireRecord(mockCallArg(mockSummarizeInStages, 1)).formatContract).toContain(
       "Additional requirements:",
     );
     expect(consumeCompactionSafeguardCancelReason(sessionManager)).toBe(

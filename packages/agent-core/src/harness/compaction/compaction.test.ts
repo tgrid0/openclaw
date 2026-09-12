@@ -765,6 +765,56 @@ describe("generateSummary thinking options", () => {
       message: "Summarization failed: model returned no summary text",
     });
   });
+
+  it("lets a caller-owned formatContract replace the default checkpoint template", async () => {
+    const model: Model = {
+      id: "summary-model",
+      name: "Summary Model",
+      api: "test-api",
+      provider: "test-provider",
+      baseUrl: "https://example.test",
+      reasoning: false,
+      input: ["text"],
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: 100_000,
+      maxTokens: 8_000,
+    };
+    let capturedPrompt = "";
+    const streamFn = vi.fn<StreamFn>((_model, context) => {
+      const block = context.messages[0]?.content[0];
+      capturedPrompt = block && "text" in block ? block.text : "";
+      const stream = createAssistantMessageEventStream();
+      stream.push({
+        type: "done",
+        reason: "stop",
+        message: createAssistant("summary", createUsage(1), 1),
+      });
+      stream.end();
+      return stream;
+    });
+
+    await generateSummary(
+      [{ role: "user", content: "hello", timestamp: 1 }],
+      model,
+      1_000,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      streamFn,
+      undefined,
+      "Produce a compact, factual summary with these exact section headings:\n## Decisions",
+    );
+
+    // The default checkpoint template's own "use this EXACT format" directive must not
+    // survive alongside a caller-supplied contract — two competing format mandates in one
+    // prompt is how weaker models silently drop the caller's required sections.
+    expect(capturedPrompt).not.toContain("Use this EXACT format");
+    expect(capturedPrompt).not.toContain("## Goal");
+    expect(capturedPrompt).toContain("## Decisions");
+  });
 });
 
 describe("split-turn compaction", () => {

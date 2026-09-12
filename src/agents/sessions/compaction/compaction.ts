@@ -74,6 +74,7 @@ export async function generateSummary(
   previousSummary?: string,
   thinkingLevel?: ThinkingLevel,
   streamFn?: StreamFn,
+  formatContract?: string,
 ): Promise<string> {
   return unwrapCompactionResult(
     await generateSummaryCore(
@@ -88,6 +89,7 @@ export async function generateSummary(
       thinkingLevel,
       streamFn as unknown as CoreStreamFn | undefined,
       openClawAgentCoreRuntime,
+      formatContract,
     ),
   );
 }
