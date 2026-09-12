@@ -18,6 +18,11 @@ const REQUIRED_SUMMARY_SECTIONS = [
   "## Pending user asks",
   "## Exact identifiers",
 ] as const;
+// The quality guard audits this section's content most strictly (exact literal
+// preservation), and it is always last in the template, so callers that must
+// truncate an oversized body need to protect it instead of cutting the raw tail.
+export const EXACT_IDENTIFIERS_SECTION_HEADING =
+  REQUIRED_SUMMARY_SECTIONS[REQUIRED_SUMMARY_SECTIONS.length - 1];
 const STRICT_EXACT_IDENTIFIERS_INSTRUCTION =
   "For ## Exact identifiers, preserve literal values exactly as seen (IDs, URLs, file paths, ports, hashes, dates, times).";
 const POLICY_OFF_EXACT_IDENTIFIERS_INSTRUCTION =

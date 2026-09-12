@@ -16,6 +16,7 @@ type CompactionSafeguardTestApi = {
   extractOpaqueIdentifiers: CallableFunction;
   auditSummaryQuality: CallableFunction;
   capCompactionSummary: CallableFunction;
+  capCompactionSummaryBody: CallableFunction;
   capCompactionSummaryPreservingSuffix: CallableFunction;
   formatFileOperations: CallableFunction;
   computeAdaptiveChunkRatio: CallableFunction;

@@ -91,6 +91,7 @@ const {
   extractOpaqueIdentifiers,
   auditSummaryQuality: auditSummaryQualityOwner,
   capCompactionSummary,
+  capCompactionSummaryBody,
   capCompactionSummaryPreservingSuffix,
   formatFileOperations,
   computeAdaptiveChunkRatio,
@@ -615,6 +616,74 @@ describe("compaction-safeguard summary budgets", () => {
     expect(capped).toContain("## Tool Failures");
     expect(capped).toContain("<read-files>");
     expect(capped).toContain("## Session Startup");
+  });
+
+  it("protects the Exact identifiers section instead of truncating it away", () => {
+    const body =
+      "## Decisions\n" +
+      `${"Filler decision detail. ".repeat(2000)}\n\n` +
+      "## Open TODOs\nNone.\n\n" +
+      "## Constraints/Rules\nNone.\n\n" +
+      "## Pending user asks\nNone.\n\n" +
+      "## Exact identifiers\n" +
+      "abcd1234ef567890, /var/log/openclaw/session-72.log, 192.168.1.73:8484";
+
+    const capped = capCompactionSummaryBody(body, MAX_COMPACTION_SUMMARY_CHARS / 4);
+
+    expect(capped.length).toBeLessThanOrEqual(MAX_COMPACTION_SUMMARY_CHARS / 4);
+    expect(capped).toContain("## Exact identifiers");
+    expect(capped).toContain("abcd1234ef567890, /var/log/openclaw/session-72.log, 192.168.1.73:8484");
+    expect(capped).toContain(SUMMARY_TRUNCATED_MARKER.trim());
+  });
+
+  it("falls back to a plain tail cap when the identifiers section itself exceeds the budget", () => {
+    const body = `## Exact identifiers\n${"x".repeat(200)}`;
+
+    const capped = capCompactionSummaryBody(body, 50);
+
+    expect(capped.length).toBeLessThanOrEqual(50);
+  });
+
+  it("falls back to a plain tail cap when no Exact identifiers heading is present", () => {
+    const body = "## Decisions\nNo identifiers section here.".repeat(2000);
+
+    const capped = capCompactionSummaryBody(body, MAX_COMPACTION_SUMMARY_CHARS / 4);
+
+    expect(capped.length).toBeLessThanOrEqual(MAX_COMPACTION_SUMMARY_CHARS / 4);
+    expect(capped).toContain(SUMMARY_TRUNCATED_MARKER.trim());
+  });
+
+  it("end-to-end: quality guard's identifier check survives body truncation via capCompactionSummaryPreservingSuffix", () => {
+    // Mirrors a real oversized-but-balanced summary: each required section carries
+    // a realistic amount of content, so the modest overage should only trim
+    // filler off the tail of the last body section (Pending user asks) instead of
+    // wiping the Exact identifiers section wholesale like the pre-fix behavior did.
+    const identifier = "9f8e7d6c5b4a3210";
+    const body =
+      "## Decisions\n" +
+      `${"D".repeat(3500)}\n\n` +
+      "## Open TODOs\n" +
+      `${"T".repeat(3500)}\n\n` +
+      "## Constraints/Rules\n" +
+      `${"C".repeat(3500)}\n\n` +
+      "## Pending user asks\n" +
+      `${"P".repeat(3500)}\n\n` +
+      `## Exact identifiers\n${identifier}`;
+    const suffix = "\n\n<workspace-critical-rules>\nRead AGENTS.md\n</workspace-critical-rules>";
+
+    const capped = capCompactionSummaryPreservingSuffix(body, suffix);
+    const quality = auditSummaryQuality({
+      summary: capped,
+      identifiers: [identifier],
+      latestAsk: null,
+    });
+
+    expect(capped).toContain("## Decisions");
+    expect(capped).toContain("## Open TODOs");
+    expect(capped).toContain("## Constraints/Rules");
+    expect(capped).toContain("## Pending user asks");
+    expect(capped).toContain(`## Exact identifiers\n${identifier}`);
+    expect(quality.ok).toBe(true);
   });
 });
 

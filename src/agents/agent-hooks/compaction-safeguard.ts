@@ -50,6 +50,7 @@ import {
   auditSummaryQuality,
   buildCompactionStructureInstructions,
   buildStructuredFallbackSummary,
+  EXACT_IDENTIFIERS_SECTION_HEADING,
   extractOpaqueIdentifiers,
   wrapUntrustedInstructionBlock,
 } from "./compaction-safeguard-quality.js";
@@ -668,6 +669,45 @@ function capCompactionSuffix(suffixInput: string | CompactionSuffix, maxChars: n
     : CONTEXT_TRUNCATED_MARKER;
 }
 
+// Finds the start of the last "## Exact identifiers" heading line, if present.
+function findProtectedTailStart(body: string): number {
+  const headingPattern = new RegExp(
+    `^[ \\t]*${EXACT_IDENTIFIERS_SECTION_HEADING.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[ \\t]*$`,
+    "gm",
+  );
+  let lastIndex = -1;
+  let match: RegExpExecArray | null;
+  while ((match = headingPattern.exec(body))) {
+    lastIndex = match.index;
+  }
+  return lastIndex;
+}
+
+// Caps an oversized summary body while protecting the "## Exact identifiers"
+// section (and anything appended after it, e.g. a merged split-turn recap) from
+// tail-truncation. A plain tail cut would cut that section first every time,
+// since the structured template always places it last — making the quality
+// guard's identifier check fail deterministically instead of only when genuinely
+// warranted. Falls back to a plain tail cap when the heading isn't found or the
+// protected section alone exceeds the budget.
+function capCompactionSummaryBody(summaryBody: string, maxChars: number): string {
+  if (maxChars <= 0 || summaryBody.length <= maxChars) {
+    return capCompactionSummary(summaryBody, maxChars);
+  }
+  const protectedStart = findProtectedTailStart(summaryBody);
+  if (protectedStart < 0) {
+    return capCompactionSummary(summaryBody, maxChars);
+  }
+  const head = summaryBody.slice(0, protectedStart);
+  const protectedTail = summaryBody.slice(protectedStart);
+  if (protectedTail.length >= maxChars) {
+    // Even the protected section alone doesn't fit; best effort on it instead.
+    return capCompactionSummary(protectedTail, maxChars);
+  }
+  const cappedHead = capCompactionSummary(head, maxChars - protectedTail.length);
+  return `${cappedHead}${protectedTail}`;
+}
+
 function budgetCompactionSummary(
   summaryBody: string,
   suffixInput: string | CompactionSuffix,
@@ -688,7 +728,7 @@ function budgetCompactionSummary(
   const bodyFloor = Math.min(summaryBody.length, Math.max(1, Math.ceil(maxChars / 2)));
   const suffixReservation = Math.min(suffix.text.length, maxChars);
   const bodySlot = Math.min(summaryBody.length, Math.max(bodyFloor, maxChars - suffixReservation));
-  const cappedBody = capCompactionSummary(summaryBody, bodySlot);
+  const cappedBody = capCompactionSummaryBody(summaryBody, bodySlot);
   const suffixBudget = Math.max(0, maxChars - cappedBody.length);
   const cappedSuffix = capCompactionSuffix(suffix, suffixBudget);
   return {
@@ -1517,6 +1557,7 @@ const testing = {
   extractOpaqueIdentifiers,
   auditSummaryQuality,
   capCompactionSummary,
+  capCompactionSummaryBody,
   capCompactionSummaryPreservingSuffix,
   formatFileOperations,
   computeAdaptiveChunkRatio,
