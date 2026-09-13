@@ -891,11 +891,23 @@ function formatContextMessage(message: AgentMessage): string | null {
   if (!rendered) {
     return null;
   }
-  const trimmed =
-    rendered.length > MAX_RECENT_TURN_TEXT_CHARS
-      ? `${truncateUtf16Safe(rendered, MAX_RECENT_TURN_TEXT_CHARS)}...`
-      : rendered;
-  return `- ${roleLabel}: ${trimmed}`;
+  if (rendered.length <= MAX_RECENT_TURN_TEXT_CHARS) {
+    return `- ${roleLabel}: ${rendered}`;
+  }
+  const trimmed = `${truncateUtf16Safe(rendered, MAX_RECENT_TURN_TEXT_CHARS)}...`;
+  // The quality guard extracts opaque identifiers (paths, URLs, hashes, host:port,
+  // long numbers) from this same message's full raw text and requires them to
+  // survive literally. This section is never regenerated on a quality-guard
+  // retry, so silently truncating past an identifier makes the guard fail the
+  // same way every attempt. Re-append anything the cut dropped.
+  const droppedIdentifiers = extractOpaqueIdentifiers(rendered).filter(
+    (identifier) => !trimmed.includes(identifier),
+  );
+  const identifiersSuffix =
+    droppedIdentifiers.length > 0
+      ? `\n  (truncated; identifiers seen above the cut: ${droppedIdentifiers.join(", ")})`
+      : "";
+  return `- ${roleLabel}: ${trimmed}${identifiersSuffix}`;
 }
 
 function formatContextSegments(messages: AgentMessage[]): string[] {
