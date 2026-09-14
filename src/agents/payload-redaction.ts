@@ -28,7 +28,15 @@ const CORE_DIAGNOSTIC_PROJECTION = {
   }),
 } satisfies DiagnosticProjectionPolicy;
 
+type DiagnosticProjectionOverrides = Pick<
+  DiagnosticProjectionPolicy,
+  "maxDiagnosticJsonLength" | "skipDiagnosticJsonDetection"
+>;
+
 /** Removes credentials and inline media bytes from diagnostic payloads before persistence. */
-export function sanitizeDiagnosticPayload(value: unknown, maxDiagnosticJsonLength?: number): unknown {
-  return projectDiagnosticValue(value, { ...CORE_DIAGNOSTIC_PROJECTION, maxDiagnosticJsonLength });
+export function sanitizeDiagnosticPayload(
+  value: unknown,
+  overrides?: DiagnosticProjectionOverrides,
+): unknown {
+  return projectDiagnosticValue(value, { ...CORE_DIAGNOSTIC_PROJECTION, ...overrides });
 }

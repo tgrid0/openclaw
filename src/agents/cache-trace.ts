@@ -164,11 +164,16 @@ export function createCacheTrace(params: CacheTraceInit): CacheTrace | null {
       event.prompt = redactAgentDiagnosticPayload(payload.prompt);
     }
     if (payload.system !== undefined && cfg.includeSystem) {
-      // The default 16KB diagnostic-JSON cap (credential-redaction.ts) exists to bound
-      // pathological embedded blobs elsewhere; a full system prompt (skills catalog + tool
-      // defs) is legitimately much larger and would otherwise collapse to a placeholder,
-      // making this trace useless for diagnosing what was actually sent. Raise it just here.
-      event.system = redactAgentDiagnosticPayload(payload.system, SYSTEM_TRACE_MAX_DIAGNOSTIC_JSON_LENGTH);
+      // credential-redaction.ts's JSON-fragment redaction exists for payloads that ARE
+      // structured JSON (tool args, API responses); a system prompt is prose that merely
+      // contains example `{...}` snippets, which trips both the 16KB "oversized" cap and the
+      // "one fragment failed to parse" malformed-JSON collapse. Neither applies to prose, so
+      // raise the cap and skip JSON detection entirely; credential-pattern redaction (secrets,
+      // bearer tokens, etc.) still runs via redactCredentialText/redactSecrets underneath.
+      event.system = redactAgentDiagnosticPayload(payload.system, {
+        maxDiagnosticJsonLength: SYSTEM_TRACE_MAX_DIAGNOSTIC_JSON_LENGTH,
+        skipDiagnosticJsonDetection: true,
+      });
       event.systemDigest = digest(payload.system);
     }
     if (payload.options) {

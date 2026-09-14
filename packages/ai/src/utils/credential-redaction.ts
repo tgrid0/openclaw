@@ -116,6 +116,17 @@ export type DiagnosticProjectionPolicy = {
    * prompt capture) can raise this instead of taking the default collapse.
    */
   maxDiagnosticJsonLength?: number;
+  /**
+   * Skips the JSON-fragment structural redaction entirely for string values.
+   * looksLikeDiagnosticJson() is a loose heuristic (any `{`, or a `"key":`
+   * pattern) meant for payloads that ARE actually JSON (tool args, API
+   * responses); prose that merely contains an example object or code snippet
+   * trips it too, and one unparseable fragment then collapses the whole
+   * string to "[Malformed diagnostic JSON redacted]". Callers capturing known
+   * prose (e.g. a system prompt) should set this so only credential-pattern
+   * redaction applies.
+   */
+  skipDiagnosticJsonDetection?: boolean;
 };
 
 function extractDiagnosticMediaField(
@@ -153,7 +164,11 @@ export function projectDiagnosticValue(
 ): unknown {
   try {
     if (typeof value === "string") {
-      const projected = redactDiagnosticText(value, policy.maxDiagnosticJsonLength);
+      const projected = redactDiagnosticText(
+        value,
+        policy.maxDiagnosticJsonLength,
+        policy.skipDiagnosticJsonDetection,
+      );
       state.changed ||= projected !== value;
       return projected;
     }
@@ -234,9 +249,10 @@ export function projectDiagnosticValue(
 export function redactDiagnosticText(
   value: string,
   maxLength: number = MAX_DIAGNOSTIC_JSON_LENGTH,
+  skipJsonDetection = false,
 ): string {
   const text = redactCredentialText(value).replace(MEDIA_DATA_URL_RE, "<redacted>");
-  if (!looksLikeDiagnosticJson(text)) {
+  if (skipJsonDetection || !looksLikeDiagnosticJson(text)) {
     return text;
   }
   if (text.length > maxLength) {
