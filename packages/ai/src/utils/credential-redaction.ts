@@ -110,6 +110,12 @@ export type DiagnosticProjectionPolicy = {
     key: string,
     media: Extract<DiagnosticMediaField, { kind: "redacted" }>,
   ) => Record<string, unknown>;
+  /**
+   * Overrides MAX_DIAGNOSTIC_JSON_LENGTH for this projection. Callers that need
+   * the full text of a large-but-legitimate diagnostic payload (e.g. a system
+   * prompt capture) can raise this instead of taking the default collapse.
+   */
+  maxDiagnosticJsonLength?: number;
 };
 
 function extractDiagnosticMediaField(
@@ -147,7 +153,7 @@ export function projectDiagnosticValue(
 ): unknown {
   try {
     if (typeof value === "string") {
-      const projected = redactDiagnosticText(value);
+      const projected = redactDiagnosticText(value, policy.maxDiagnosticJsonLength);
       state.changed ||= projected !== value;
       return projected;
     }
@@ -225,12 +231,15 @@ export function projectDiagnosticValue(
 }
 
 /** Redacts bounded structured JSON while preserving harmless diagnostic text byte-for-byte. */
-export function redactDiagnosticText(value: string): string {
+export function redactDiagnosticText(
+  value: string,
+  maxLength: number = MAX_DIAGNOSTIC_JSON_LENGTH,
+): string {
   const text = redactCredentialText(value).replace(MEDIA_DATA_URL_RE, "<redacted>");
   if (!looksLikeDiagnosticJson(text)) {
     return text;
   }
-  if (text.length > MAX_DIAGNOSTIC_JSON_LENGTH) {
+  if (text.length > maxLength) {
     return "[Oversized diagnostic JSON redacted]";
   }
   let cursor = 0;
@@ -243,7 +252,13 @@ export function redactDiagnosticText(value: string): string {
     try {
       const state = { changed: false, nodesRemaining: 64 };
       const parsed = JSON.parse(fragment.json);
-      const projected = projectDiagnosticValue(parsed, {}, new WeakSet(), false, state);
+      const projected = projectDiagnosticValue(
+        parsed,
+        { maxDiagnosticJsonLength: maxLength },
+        new WeakSet(),
+        false,
+        state,
+      );
       redacted += state.changed ? stableStringify(projected) : fragment.json;
     } catch {
       if (!PLAIN_BRACKET_TAG_RE.test(fragment.json) || JSON_ARRAY_START_RE.test(fragment.json)) {

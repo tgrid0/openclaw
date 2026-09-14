@@ -89,6 +89,7 @@ type CacheTraceConfig = {
 type CacheTraceWriter = QueuedFileWriter;
 
 const writers = new Map<string, CacheTraceWriter>();
+const SYSTEM_TRACE_MAX_DIAGNOSTIC_JSON_LENGTH = 2 * 1024 * 1024;
 
 function resolveCacheTraceConfig(params: CacheTraceInit): CacheTraceConfig {
   const env = params.env ?? process.env;
@@ -163,7 +164,11 @@ export function createCacheTrace(params: CacheTraceInit): CacheTrace | null {
       event.prompt = redactAgentDiagnosticPayload(payload.prompt);
     }
     if (payload.system !== undefined && cfg.includeSystem) {
-      event.system = redactAgentDiagnosticPayload(payload.system);
+      // The default 16KB diagnostic-JSON cap (credential-redaction.ts) exists to bound
+      // pathological embedded blobs elsewhere; a full system prompt (skills catalog + tool
+      // defs) is legitimately much larger and would otherwise collapse to a placeholder,
+      // making this trace useless for diagnosing what was actually sent. Raise it just here.
+      event.system = redactAgentDiagnosticPayload(payload.system, SYSTEM_TRACE_MAX_DIAGNOSTIC_JSON_LENGTH);
       event.systemDigest = digest(payload.system);
     }
     if (payload.options) {

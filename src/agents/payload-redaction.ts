@@ -29,6 +29,6 @@ const CORE_DIAGNOSTIC_PROJECTION = {
 } satisfies DiagnosticProjectionPolicy;
 
 /** Removes credentials and inline media bytes from diagnostic payloads before persistence. */
-export function sanitizeDiagnosticPayload(value: unknown): unknown {
-  return projectDiagnosticValue(value, CORE_DIAGNOSTIC_PROJECTION);
+export function sanitizeDiagnosticPayload(value: unknown, maxDiagnosticJsonLength?: number): unknown {
+  return projectDiagnosticValue(value, { ...CORE_DIAGNOSTIC_PROJECTION, maxDiagnosticJsonLength });
 }
