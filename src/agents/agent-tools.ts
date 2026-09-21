@@ -110,6 +110,7 @@ import {
 } from "./tools/cron-tool.js";
 import type { CronToolOptions } from "./tools/cron-tool.types.js";
 import { wrapToolWithGatewayCallerIdentity } from "./tools/gateway-caller-context.js";
+import { deniesOwnerOnlyToolAccess } from "./tools/owner-only-tool-execution.js";
 
 const MEMORY_FLUSH_ALLOWED_TOOL_NAMES = new Set(["read", "write"]);
 
@@ -626,12 +627,11 @@ function createOpenClawCodingToolsInternal(options?: OpenClawCodingToolsOptions)
   const cronCreatorAuthorityResolver = bindActiveCronCreatorAuthorityResolver(options?.runId);
   // A fresh exact-run capability authorizes only automation creation. Keep every
   // other owner-only control-plane tool denied for senderless operator turns.
-  const ownerOnlyCoreToolDenylist =
-    options?.senderIsOwner === false
-      ? GATEWAY_OWNER_ONLY_CORE_TOOLS.filter(
-          (toolName) => toolName !== AUTOMATIONS_TOOL_NAME || !cronCreatorAuthorityResolver,
-        )
-      : [];
+  const ownerOnlyCoreToolDenylist = deniesOwnerOnlyToolAccess(options?.senderIsOwner)
+    ? GATEWAY_OWNER_ONLY_CORE_TOOLS.filter(
+        (toolName) => toolName !== AUTOMATIONS_TOOL_NAME || !cronCreatorAuthorityResolver,
+      )
+    : [];
   const ownerOnlyCoreToolPolicy =
     ownerOnlyCoreToolDenylist.length > 0 ? { deny: ownerOnlyCoreToolDenylist } : undefined;
   const pluginToolAllowlist = appendRuntimePluginToolGrant(

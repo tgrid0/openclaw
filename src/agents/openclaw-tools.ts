@@ -62,6 +62,7 @@ import { createMobileUiTool } from "./tools/mobile-ui-tool.js";
 import { createMusicGenerateTool } from "./tools/music-generate-tool.js";
 import { createNodesTool } from "./tools/nodes-tool.js";
 import { createOpenClawDelegateToolsForRun } from "./tools/openclaw-delegate-tool.js";
+import { wrapToolsWithOwnerOnlyExecution } from "./tools/owner-only-tool-execution.js";
 import { createPdfTool } from "./tools/pdf-tool.js";
 import { createPortalTool } from "./tools/portal-tool.js";
 import { createScreenTool } from "./tools/screen-tool.js";
@@ -612,6 +613,11 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
 
   allTools = filterToolsByClientCaps(allTools, gatedOptions?.clientCaps);
   options?.recordToolPrepStage?.("openclaw-tools:client-capabilities");
+  // Owner-only control-plane tools are refused when the turn runs, not when the
+  // prompt is built: hiding them reshapes the wire tools array between turns of
+  // one session and invalidates the whole provider prompt-cache prefix.
+  allTools = wrapToolsWithOwnerOnlyExecution(allTools, options?.senderIsOwner);
+  options?.recordToolPrepStage?.("openclaw-tools:owner-only-execution");
 
   const hookAgentId = options?.requesterAgentIdOverride ?? sessionAgentId;
   const wrapGatewayCallerIdentity = createGatewayToolCallerWrapper(
