@@ -30,6 +30,7 @@ import {
   buildProjectMemoryWriteInstruction,
   prepareProjectMemoryBootstrap,
 } from "../../project-memory-bootstrap.js";
+import { pinSkillsPromptForSession } from "../../prompt-skills-pin.js";
 import { resolveAgentPromptSurfaceForSessionKey } from "../../prompt-surface.js";
 import { collectRuntimeChannelCapabilities } from "../../runtime-capabilities.js";
 import { resolveSandboxRuntimeStatus } from "../../sandbox/runtime-status.js";
@@ -204,7 +205,14 @@ export async function prepareEmbeddedAttemptSystemPrompt(params: {
   const promptSurface = resolveAgentPromptSurfaceForSessionKey(attempt.sessionKey);
   const toolPolicyRestricted = toolPolicyRestrictsTools({ allow: attempt.toolsAllow });
   const effectivePromptMode = toolPolicyRestricted ? ("minimal" as const) : promptMode;
-  const effectiveSkillsPrompt = toolPolicyRestricted ? undefined : params.skillsPrompt;
+  // The catalog is part of the cached system-prompt prefix, so a mid-session skills
+  // refresh must not reshape it; drift is pinned to this session and logged.
+  const effectiveSkillsPrompt = toolPolicyRestricted
+    ? undefined
+    : pinSkillsPromptForSession({
+        sessionKey: attempt.sessionKey,
+        skillsPrompt: params.skillsPrompt,
+      });
   const openClawReferences = await resolveOpenClawReferencePaths({
     workspaceDir: params.effectiveWorkspace,
     argv1: process.argv[1],
