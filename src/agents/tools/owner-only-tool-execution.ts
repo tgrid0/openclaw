@@ -13,17 +13,19 @@ import { AUTOMATIONS_TOOL_NAME } from "./automations-tool-name.js";
 import type { AnyAgentTool } from "./common.js";
 import { ToolAuthorizationError } from "./common.js";
 
-/**
- * `automations` is excluded deliberately: scheduler authorization is owned by the
- * creator-authority gate inside the cron tool (`cronCreateRequiresCreatorAuthority`),
- * which decides from the requested job's trigger and tools allow rather than from
- * the sender verdict alone. The inherited visibility deny singled the same tool out
- * for the same reason, so an owner-only check here would override its real owner and
- * refuse creation the admitted run was explicitly authorized to make.
- */
-const OWNER_ONLY_GUARDED_TOOL_NAMES = new Set<string>(
-  GATEWAY_OWNER_ONLY_CORE_TOOLS.filter((name) => name !== AUTOMATIONS_TOOL_NAME),
-);
+const OWNER_ONLY_CORE_TOOL_NAMES = new Set<string>(GATEWAY_OWNER_ONLY_CORE_TOOLS);
+
+export type OwnerOnlyExecutionCarveOut = {
+  /**
+   * A fresh creator-authority capability is bound for this run, so `automations`
+   * is authorized by the cron creator-authority gate (`cronCreateRequiresCreatorAuthority`,
+   * which judges the requested job's trigger and tools allow) instead of by the
+   * sender verdict. The visibility rule this replaced carved the same tool out under
+   * the same condition; a blanket owner refusal here would override that owner and
+   * break scheduling an admitted run was explicitly authorized to make.
+   */
+  automationCreatorAuthorityAvailable?: boolean;
+};
 
 /**
  * Single home for the owner verdict's tri-state. An explicitly non-owner sender
@@ -36,24 +38,39 @@ export function deniesOwnerOnlyToolAccess(senderIsOwner: boolean | undefined): b
   return senderIsOwner === false;
 }
 
+function deniesToolExecution(
+  toolName: string,
+  senderIsOwner: boolean | undefined,
+  carveOut: OwnerOnlyExecutionCarveOut | undefined,
+): boolean {
+  if (!OWNER_ONLY_CORE_TOOL_NAMES.has(toolName)) {
+    return false;
+  }
+  if (toolName === AUTOMATIONS_TOOL_NAME && carveOut?.automationCreatorAuthorityAvailable) {
+    return false;
+  }
+  return deniesOwnerOnlyToolAccess(senderIsOwner);
+}
+
 /**
  * Wraps owner-only tools so a refused turn gets `ToolAuthorizationError` when it
  * calls the tool, rather than relying on the tool being absent from the prompt.
  * Identity-independent on purpose: the verdict arrives with the turn, so a run
  * that could not resolve caller identity must not silently drop an explicit refusal.
  *
- * Returns the original array untouched unless the verdict actually refuses, so the
+ * Returns the original array untouched unless something is actually refused, so the
  * owner/absent path adds no wrappers.
  */
 export function wrapToolsWithOwnerOnlyExecution(
   tools: AnyAgentTool[],
   senderIsOwner: boolean | undefined,
+  carveOut?: OwnerOnlyExecutionCarveOut,
 ): AnyAgentTool[] {
-  if (!deniesOwnerOnlyToolAccess(senderIsOwner)) {
+  if (!tools.some((tool) => deniesToolExecution(tool.name, senderIsOwner, carveOut))) {
     return tools;
   }
   return tools.map((tool) => {
-    if (!OWNER_ONLY_GUARDED_TOOL_NAMES.has(tool.name) || !tool.execute) {
+    if (!deniesToolExecution(tool.name, senderIsOwner, carveOut) || !tool.execute) {
       return tool;
     }
     const guarded: AnyAgentTool = {

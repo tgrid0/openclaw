@@ -26,7 +26,6 @@ import type {
 import { resolveMemoryFlushPlan } from "../plugins/memory-state.js";
 import { appendRuntimePluginToolGrant } from "../plugins/tool-grant-allowlist.js";
 import { getPluginToolMeta } from "../plugins/tools.js";
-import { GATEWAY_OWNER_ONLY_CORE_TOOLS } from "../security/dangerous-tools.js";
 import type { InputProvenance } from "../sessions/input-provenance.js";
 import type { SkillSnapshot, SkillUsagePath } from "../skills/types.js";
 import type { SkillWorkshopRunOptions } from "../skills/workshop/types.js";
@@ -102,7 +101,6 @@ import {
   type ToolSearchCatalogRef,
   type ToolSearchCatalogToolExecutor,
 } from "./tool-search.js";
-import { AUTOMATIONS_TOOL_NAME } from "./tools/automations-tool-name.js";
 import {
   replaceWithEffectiveCronCreatorToolAllowlist,
   type CronCreatorToolAllowlistEntry,
@@ -110,7 +108,6 @@ import {
 } from "./tools/cron-tool.js";
 import type { CronToolOptions } from "./tools/cron-tool.types.js";
 import { wrapToolWithGatewayCallerIdentity } from "./tools/gateway-caller-context.js";
-import { deniesOwnerOnlyToolAccess } from "./tools/owner-only-tool-execution.js";
 
 const MEMORY_FLUSH_ALLOWED_TOOL_NAMES = new Set(["read", "write"]);
 
@@ -625,23 +622,11 @@ function createOpenClawCodingToolsInternal(options?: OpenClawCodingToolsOptions)
     recordToolPrepStage: options?.recordToolPrepStage,
   });
   const cronCreatorAuthorityResolver = bindActiveCronCreatorAuthorityResolver(options?.runId);
-  // A fresh exact-run capability authorizes only automation creation. Keep every
-  // other owner-only control-plane tool denied for senderless operator turns.
-  const ownerOnlyCoreToolDenylist = deniesOwnerOnlyToolAccess(options?.senderIsOwner)
-    ? GATEWAY_OWNER_ONLY_CORE_TOOLS.filter(
-        (toolName) => toolName !== AUTOMATIONS_TOOL_NAME || !cronCreatorAuthorityResolver,
-      )
-    : [];
-  const ownerOnlyCoreToolPolicy =
-    ownerOnlyCoreToolDenylist.length > 0 ? { deny: ownerOnlyCoreToolDenylist } : undefined;
   const pluginToolAllowlist = appendRuntimePluginToolGrant(
     capabilityProfile.policy.explicitToolAllowlist,
     runtimePluginToolGrant,
   );
-  const pluginToolDenylist = [
-    ...capabilityProfile.policy.explicitToolDenylist,
-    ...ownerOnlyCoreToolDenylist,
-  ];
+  const pluginToolDenylist = [...capabilityProfile.policy.explicitToolDenylist];
   const inheritedToolDenylist = [...pluginToolDenylist];
   // Passed by reference to sessions_spawn and populated after the final policy
   // pass so child sessions inherit the actual parent tool surface.
@@ -876,8 +861,8 @@ function createOpenClawCodingToolsInternal(options?: OpenClawCodingToolsOptions)
     localModelLeanPreserveToolNames,
   });
   options?.recordToolPrepStage?.("model-provider-policy");
-  // Sender identity is primarily command/action auth, with one Gateway parity exception:
-  // explicit non-owner callers never receive owner-only control-plane core tools.
+  // Sender identity is command/action auth enforced at execution by
+  // wrapToolsWithOwnerOnlyExecution; it must not reshape the advertised array.
   const subagentFiltered = applyToolPolicyPipeline({
     tools: toolsForModelProvider,
     toolMeta: (tool) => getPluginToolMeta(tool),
@@ -885,13 +870,6 @@ function createOpenClawCodingToolsInternal(options?: OpenClawCodingToolsOptions)
     steps: buildConversationToolPolicyPipelineSteps({
       capabilityProfile,
       policies: conversationToolPolicies,
-      additionalStepsAfterSandbox: [
-        {
-          policy: ownerOnlyCoreToolPolicy,
-          label: "gateway sender owner-only tools",
-          unavailableCoreToolReason,
-        },
-      ],
       includeRuntimeToolPolicy: true,
       unavailableCoreToolReason,
     }),

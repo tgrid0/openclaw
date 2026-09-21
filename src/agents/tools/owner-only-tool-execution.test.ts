@@ -36,26 +36,27 @@ describe("owner-only tool execution guard", () => {
   it("refuses every owner-only core tool for an explicitly non-owner turn", async () => {
     // Invariant, not a sampled list: a tool added to GATEWAY_OWNER_ONLY_CORE_TOOLS
     // later must be refused here too.
-    const guardedNames = GATEWAY_OWNER_ONLY_CORE_TOOLS.filter(
-      (name) => name !== AUTOMATIONS_TOOL_NAME,
-    );
     const wrapped = wrapToolsWithOwnerOnlyExecution(
-      guardedNames.map((name) => executableTool(name)),
+      GATEWAY_OWNER_ONLY_CORE_TOOLS.map((name) => executableTool(name)),
       false,
     );
 
-    for (const name of guardedNames) {
+    for (const name of GATEWAY_OWNER_ONLY_CORE_TOOLS) {
       await expect(findTool(wrapped, name).execute("call-id", {})).rejects.toThrow(
         ToolAuthorizationError,
       );
     }
   });
 
-  it("leaves automations to its own creator-authority gate", async () => {
-    // A non-owner turn can be authorized to schedule by the admitted run's fresh
-    // creator authority, which the cron tool evaluates from the requested job.
-    // An owner-only refusal here would override that owner and break scheduling.
-    const wrapped = wrapToolsWithOwnerOnlyExecution([executableTool(AUTOMATIONS_TOOL_NAME)], false);
+  it("defers automations to a bound creator-authority capability", async () => {
+    // A run admitted with fresh cron creator authority may schedule independently of
+    // the sender verdict; the cron tool judges the requested job. Refusing here would
+    // override that owner, which is the carve-out the visibility rule already had.
+    const wrapped = wrapToolsWithOwnerOnlyExecution(
+      [executableTool(AUTOMATIONS_TOOL_NAME)],
+      false,
+      { automationCreatorAuthorityAvailable: true },
+    );
 
     await expect(
       findTool(wrapped, AUTOMATIONS_TOOL_NAME).execute("call-id", {}),

@@ -616,7 +616,11 @@ export function createOpenClawTools(options?: OpenClawToolsOptions): AnyAgentToo
   // Owner-only control-plane tools are refused when the turn runs, not when the
   // prompt is built: hiding them reshapes the wire tools array between turns of
   // one session and invalidates the whole provider prompt-cache prefix.
-  allTools = wrapToolsWithOwnerOnlyExecution(allTools, options?.senderIsOwner);
+  allTools = wrapToolsWithOwnerOnlyExecution(allTools, options?.senderIsOwner, {
+    // Presence, never invocation: a bound resolver means an active creator-authority
+    // capability for this run. Calling it here would consume the capability.
+    automationCreatorAuthorityAvailable: Boolean(options?.resolveCronCreatorToolAuthority),
+  });
   options?.recordToolPrepStage?.("openclaw-tools:owner-only-execution");
 
   const hookAgentId = options?.requesterAgentIdOverride ?? sessionAgentId;
