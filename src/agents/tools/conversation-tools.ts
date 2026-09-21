@@ -25,6 +25,7 @@ import {
   callAgentToolGatewayRequest,
   type AgentToolGatewayRequestCaller,
 } from "./in-process-gateway.js";
+import { deniesOwnerOnlyToolAccess } from "./owner-only-tool-execution.js";
 
 const CONVERSATION_REF_PATTERN = /^conv_[a-f0-9]{32}$/u;
 
@@ -75,7 +76,7 @@ function resolveToolAgentId(options: ConversationToolOptions): string {
 }
 
 function requireOwner(options: ConversationToolOptions): void {
-  if (options.senderIsOwner === false) {
+  if (deniesOwnerOnlyToolAccess(options.senderIsOwner)) {
     throw new ToolAuthorizationError("Conversation tools require owner access");
   }
 }
