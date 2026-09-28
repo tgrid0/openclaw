@@ -14,9 +14,9 @@ OpenClaw standardizes timestamps so the model sees a **single reference time** i
 | ----------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------ |
 | Message envelopes | Wraps inbound channel messages: `[Signal +1555 Sun 2026-01-18 00:19:42 PST] hello`                         | Host timezone if `userTimezone` unset | `agents.defaults.userTimezone`                         |
 | Tool payloads     | Channel `readMessages`-style tools return raw provider time plus normalized `timestampMs` / `timestampUtc` | UTC fields always present             | Not configurable; preserves provider-native timestamps |
-| System prompt     | A volatile `Temporal Context` block with the local date and time zone; exact time remains tool-backed      | Host timezone if `userTimezone` unset | `agents.defaults.userTimezone`                         |
+| System prompt     | A `Temporal Context` block with the local time zone; current date and time remain tool-backed              | Host timezone if `userTimezone` unset | `agents.defaults.userTimezone`                         |
 
-The date and zone live below the system-prompt cache boundary, so day rollover does not invalidate the stable prefix. The prompt deliberately omits the live clock; when the agent needs exact current time and `session_status` is available, it calls that tool.
+The zone lives below the system-prompt cache boundary. The prompt omits the changing date and clock so day rollover does not change the system prompt; when the agent needs the current date or exact time and `session_status` is available, it calls that tool.
 
 ## Setting the user timezone
 

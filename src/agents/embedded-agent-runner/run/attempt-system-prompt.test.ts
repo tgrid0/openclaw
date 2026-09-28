@@ -276,7 +276,6 @@ describe("buildAttemptSystemPrompt", () => {
           tools: [],
           modelAliasLines: [],
           userTimezone: "UTC",
-          userDate: "2026-01-05",
           contextFiles: [
             { path: "/tmp/openclaw/SOUL.md", content: "SOUL_CONTEXT_MARKER" },
             { path: "/tmp/openclaw/IDENTITY.md", content: "IDENTITY_CONTEXT_MARKER" },
@@ -315,7 +314,6 @@ describe("buildAttemptSystemPrompt", () => {
         tools: [],
         modelAliasLines: [],
         userTimezone: "UTC",
-        userDate: "2026-01-05",
         activeProjectKeys: ["github.com/acme/Alpha"],
         contextFiles: [
           {
@@ -354,7 +352,6 @@ describe("buildAttemptSystemPrompt", () => {
         tools: [],
         modelAliasLines: [],
         userTimezone: "UTC",
-        userDate: "2026-01-05",
         bootstrapMode: "full",
         bootstrapTruncationNotice: "Bootstrap context was truncated.",
         contextFiles: [
@@ -412,7 +409,6 @@ describe("buildAttemptSystemPrompt", () => {
         tools: [],
         modelAliasLines: [],
         userTimezone: "UTC",
-        userDate: "2026-01-05",
         promptMode: "minimal",
         extraSystemPrompt:
           "# Subagent Context\n\n## Your Role\n- You were created to handle: RUN_MODE_TASK_77950",
@@ -446,7 +442,6 @@ describe("buildAttemptSystemPrompt", () => {
         tools: [],
         modelAliasLines: [],
         userTimezone: "UTC",
-        userDate: "2026-01-05",
         bootstrapMode: "full",
         contextFiles: [
           {

@@ -250,7 +250,7 @@ export async function resolveCommandsSystemPromptBundle(
     params.ctx.OriginatingTo?.trim() ||
     params.command.to;
   const fallbackThreadId = params.ctx.MessageThreadId ?? params.ctx.TransportThreadId;
-  const { runtimeInfo, userTimezone, userDate, reactionGuidance, messageToolHints } =
+  const { runtimeInfo, userTimezone, reactionGuidance, messageToolHints } =
     await resolveAgentRuntimePrompt({
       config: params.cfg,
       agentId: sessionAgentId,
@@ -303,7 +303,6 @@ export async function resolveCommandsSystemPromptBundle(
     reasoningTagHint: false,
     toolNames,
     userTimezone,
-    userDate,
     contextFiles: injectedFiles,
     skillsPrompt,
     acpEnabled: isAcpRuntimeSpawnAvailable({

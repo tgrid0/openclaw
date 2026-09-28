@@ -122,7 +122,6 @@ export async function prepareEmbeddedAttemptSystemPrompt(params: {
     messageToolHints,
     runtimeInfo,
     userTimezone,
-    userDate,
   } = await resolveAgentRuntimePrompt({
     config: attempt.config,
     agentId: params.sessionAgentId,
@@ -283,7 +282,6 @@ export async function prepareEmbeddedAttemptSystemPrompt(params: {
       capabilityToolNames: [...params.capabilityToolNames].toSorted(),
       tools: params.effectiveTools,
       userTimezone,
-      userDate,
       contextFiles: params.bootstrap.contextFiles,
       bootstrapMode: params.bootstrap.bootstrapMode,
       bootstrapTruncationNotice: buildBootstrapPromptWarningNotice(

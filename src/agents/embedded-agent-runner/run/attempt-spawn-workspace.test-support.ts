@@ -649,7 +649,6 @@ vi.mock("../../system-prompt-params.js", () => ({
   buildSystemPromptParams: () => ({
     runtimeInfo: {},
     userTimezone: "UTC",
-    userDate: "2026-01-05",
   }),
 }));
 

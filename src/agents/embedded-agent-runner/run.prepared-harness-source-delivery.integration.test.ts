@@ -249,7 +249,6 @@ describe("prepared harness source delivery", () => {
         },
         tools: attemptParams.forceMessageTool ? [{ name: "message" } as never] : [],
         userTimezone: "UTC",
-        userDate: "2026-08-11",
       });
     };
     mockedBuildEmbeddedRunPayloads.mockReturnValue(

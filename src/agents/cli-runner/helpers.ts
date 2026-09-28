@@ -131,7 +131,7 @@ export function buildCliAgentSystemPrompt(params: {
     agentId: params.agentId,
   });
   const defaultModelLabel = `${defaultModelRef.provider}/${defaultModelRef.model}`;
-  const { runtimeInfo, userTimezone, userDate } = buildSystemPromptParams({
+  const { runtimeInfo, userTimezone } = buildSystemPromptParams({
     config: params.config,
     agentId: params.agentId,
     workspaceDir: runtimeCwd,
@@ -174,7 +174,6 @@ export function buildCliAgentSystemPrompt(params: {
     toolNames: params.tools.map((tool) => tool.name),
     skillsPrompt: params.skillsPrompt,
     userTimezone,
-    userDate,
     contextFiles: params.contextFiles,
     bootstrapMode: params.bootstrapMode,
     bootstrapTruncationNotice: params.bootstrapTruncationNotice,

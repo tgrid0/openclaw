@@ -49,7 +49,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       tools: [],
       modelAliasLines: [],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
       promptContribution: {
         stablePrefix: "## Embedded Stable\n\nStable provider guidance.",
       },
@@ -75,7 +74,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       tools: [],
       modelAliasLines: [],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
       activeProjectKeys: ["github.com/acme/Alpha"],
       contextFiles: [
         {
@@ -119,7 +117,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       },
       tools: [{ name: "sessions_spawn" } as never],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
     });
 
     expect(prompt).toContain("## Delegation");
@@ -151,7 +148,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       tools: [{ name: "tool_search" } as never],
       capabilityToolNames: ["sessions_spawn"],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
     });
 
     expect(prompt).toContain("## Delegation");
@@ -184,7 +180,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       },
       tools: [{ name: "sessions_spawn" } as never],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
     });
 
     expect(prompt).toContain("## Proactive Sub-Agent Orchestration");
@@ -215,7 +210,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       tools: [],
       modelAliasLines: [],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
     });
 
     expect(prompt).toContain("tools.fs.workspaceOnly ON");
@@ -245,7 +239,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       tools: [],
       modelAliasLines: [],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
     });
 
     expect(prompt).not.toContain("tools.fs.workspaceOnly ON");
@@ -269,7 +262,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       nativeCommandGuidanceLines: ["Subagent-only command guidance."],
       modelAliasLines: [],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
       promptMode: "minimal",
     });
 
@@ -301,7 +293,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       tools: [],
       modelAliasLines: [],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
       includeMemorySection: false,
     });
 
@@ -336,7 +327,6 @@ describe("buildEmbeddedSystemPrompt", () => {
       tools: [{ name: "process" } as never],
       modelAliasLines: [],
       userTimezone: "UTC",
-      userDate: "2026-01-05",
     } satisfies Parameters<typeof buildEmbeddedSystemPrompt>[0];
     const prompt = buildEmbeddedSystemPrompt(params);
 

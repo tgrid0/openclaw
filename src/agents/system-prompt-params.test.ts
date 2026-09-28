@@ -37,10 +37,7 @@ describe("buildSystemPromptParams", () => {
     vi.useRealTimers();
   });
 
-  it("formats the current date in the configured user timezone", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-01-05T23:30:00.000Z"));
-
+  it("resolves the configured user timezone", () => {
     const utc = buildParams({
       config: { agents: { defaults: { userTimezone: "UTC" } } },
     });
@@ -48,8 +45,8 @@ describe("buildSystemPromptParams", () => {
       config: { agents: { defaults: { userTimezone: "Asia/Tokyo" } } },
     });
 
-    expect(utc.userDate).toBe("2026-01-05");
-    expect(tokyo.userDate).toBe("2026-01-06");
+    expect(utc.userTimezone).toBe("UTC");
+    expect(tokyo.userTimezone).toBe("Asia/Tokyo");
   });
 
   it("projects only the stable active-node identity", () => {

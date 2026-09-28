@@ -12,7 +12,6 @@ const {
   buildSystemPromptParamsMock: vi.fn((params: { runtime: Record<string, unknown> }) => ({
     runtimeInfo: params.runtime,
     userTimezone: "UTC",
-    userDate: "2026-08-28",
   })),
   collectRuntimeChannelCapabilitiesMock: vi.fn(() => ["voice"]),
   getMachineDisplayNameMock: vi.fn(async () => "test-host"),

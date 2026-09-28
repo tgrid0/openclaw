@@ -65,20 +65,17 @@ export function formatDateStamp(nowMs: number, timeZone: string): string {
 }
 
 export function buildTemporalContextSection(params: {
-  userDate?: string;
   userTimezone?: string;
   sessionStatusAvailable: boolean;
 }): string[] {
-  const userDate = params.userDate?.trim();
   const userTimezone = params.userTimezone?.trim();
-  if (!userDate || !userTimezone) {
+  if (!userTimezone) {
     return [];
   }
   return [
     "## Temporal Context",
-    `Current date: ${userDate}`,
     `Time zone: ${userTimezone}`,
-    ...(params.sessionStatusAvailable ? ["For the exact current time, use `session_status`."] : []),
+    ...(params.sessionStatusAvailable ? ["For the current date or exact time, use `session_status`."] : []),
     "",
   ];
 }
@@ -90,7 +87,6 @@ export function buildTemporalContextText(params: {
 }): string {
   const userTimezone = resolveUserTimezone(params.configuredTimezone);
   return buildTemporalContextSection({
-    userDate: formatDateStamp(Date.now(), userTimezone),
     userTimezone,
     sessionStatusAvailable: params.sessionStatusAvailable,
   })

@@ -783,7 +783,6 @@ export function buildAgentSystemPrompt(params: {
   toolSummaries?: Record<string, string>;
   modelAliasLines?: string[];
   userTimezone?: string;
-  userDate?: string;
   contextFiles?: EmbeddedContextFile[];
   bootstrapMode?: BootstrapMode;
   bootstrapTruncationNotice?: string;
@@ -1038,7 +1037,6 @@ export function buildAgentSystemPrompt(params: {
     : undefined;
   const reasoningLevel = params.reasoningLevel ?? "off";
   const userTimezone = params.userTimezone?.trim();
-  const userDate = params.userDate?.trim();
   const skillsPrompt = params.skillsPrompt?.trim();
   const runtimeChannel = normalizeOptionalLowercaseString(runtimeInfo?.channel);
   const runtimeChatType = normalizeChatType(runtimeInfo?.chatType);
@@ -1439,11 +1437,10 @@ export function buildAgentSystemPrompt(params: {
 
   const lines = [stablePrefix];
 
-  // Local date and timezone can change between turns. Keep them at the front of
-  // the volatile suffix so rollover is visible without invalidating the stable prefix.
+  // Timezone and tool availability may change between turns; keep this section
+  // below the shared cache boundary.
   lines.push(
     ...buildTemporalContextSection({
-      userDate,
       userTimezone,
       sessionStatusAvailable: availableTools.has("session_status"),
     }),

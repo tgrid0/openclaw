@@ -1,7 +1,7 @@
 import { SYSTEM_PROMPT_CACHE_BOUNDARY } from "@openclaw/ai/internal/shared";
 // System prompt tests cover the main prompt facade, prompt-surface routing, and
 // user-visible sections for owners, tools, safety, skills, and subagents.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SILENT_REPLY_TOKEN } from "../auto-reply/tokens.js";
 import { CHANNEL_IDS } from "../channels/ids.js";
 import {
@@ -1224,71 +1224,60 @@ describe("buildAgentSystemPrompt", () => {
     expect(prompt).not.toContain("bootstrapMaxChars");
   });
 
-  it("shows the current local date and timezone", () => {
+  it("shows the local timezone without a changing date", () => {
     const prompt = buildAgentSystemPrompt({
       workspaceDir: "/tmp/openclaw",
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
 
     expect(prompt).toContain("## Temporal Context");
-    expect(prompt).toContain("Current date: 2026-01-05");
     expect(prompt).toContain("Time zone: America/Chicago");
+    expect(prompt).not.toContain("Current date:");
   });
 
   it("points to session_status for exact time only when the tool is available", () => {
     const withStatus = buildAgentSystemPrompt({
       workspaceDir: "/tmp/clawd",
       toolNames: ["session_status"],
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
     const withoutStatus = buildAgentSystemPrompt({
       workspaceDir: "/tmp/clawd",
       toolNames: ["exec"],
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
 
-    expect(withStatus).toContain("For the exact current time, use `session_status`.");
+    expect(withStatus).toContain("For the current date or exact time, use `session_status`.");
     expect(withoutStatus).not.toContain("session_status");
   });
 
   it("does not inject a live clock into temporal context", () => {
     const prompt = buildAgentSystemPrompt({
       workspaceDir: "/tmp/clawd",
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
 
-    expect(prompt).toContain("Current date: 2026-01-05");
     expect(prompt).toContain("Time zone: America/Chicago");
     expect(prompt).not.toContain("3:26 PM");
     expect(prompt).not.toContain("15:26");
   });
 
-  it("keeps date rollover and timezone changes below the prompt-cache boundary", () => {
-    const buildPrompt = (userDate: string, userTimezone: string) =>
+  it("keeps timezone changes below the prompt-cache boundary", () => {
+    const buildPrompt = (userTimezone: string) =>
       buildAgentSystemPrompt({
         workspaceDir: "/tmp/clawd",
         toolNames: ["session_status"],
-        userDate,
         userTimezone,
       });
-    const first = buildPrompt("2026-01-05", "America/Chicago");
-    const nextDay = buildPrompt("2026-01-06", "America/Chicago");
-    const nextZone = buildPrompt("2026-01-06", "Asia/Tokyo");
+    const first = buildPrompt("America/Chicago");
+    const nextZone = buildPrompt("Asia/Tokyo");
     const stablePrefix = (prompt: string) =>
       prompt.slice(0, prompt.indexOf(SYSTEM_PROMPT_CACHE_BOUNDARY));
     const volatileSuffix = (prompt: string) =>
       prompt.slice(prompt.indexOf(SYSTEM_PROMPT_CACHE_BOUNDARY));
 
-    expect(stablePrefix(first)).toBe(stablePrefix(nextDay));
     expect(stablePrefix(first)).toBe(stablePrefix(nextZone));
-    expect(stablePrefix(first)).not.toContain("2026-01-05");
     expect(stablePrefix(first)).not.toContain("America/Chicago");
-    expect(volatileSuffix(first)).toContain("Current date: 2026-01-05");
-    expect(volatileSuffix(nextDay)).toContain("Current date: 2026-01-06");
     expect(volatileSuffix(nextZone)).toContain("Time zone: Asia/Tokyo");
   });
 
