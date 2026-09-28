@@ -9,7 +9,7 @@ title: "Date and time"
 OpenClaw uses the configured **user timezone** for message envelopes, system events, and
 the system prompt. When `agents.defaults.userTimezone` is unset, those surfaces use the
 host timezone. Provider timestamps are preserved so tools keep their native semantics.
-When the agent needs the exact current time and `session_status` is available, it runs that tool.
+When the agent needs the current date or exact time and `session_status` is available, it runs that tool.
 
 ## Message envelopes (local by default)
 
@@ -44,17 +44,18 @@ host timezone. Absolute timestamps and elapsed-time suffixes are built in.
 
 ## System prompt: temporal context
 
-The system prompt includes a volatile **Temporal Context** section with the local calendar date
-and time zone, but no live clock:
+The system prompt includes a **Temporal Context** section with the local time zone,
+but no date or live clock:
 
 ```
-Current date: 2026-01-05
 Time zone: America/Chicago
 ```
 
 The zone is `agents.defaults.userTimezone` when configured, otherwise the host timezone.
-The section lives below the prompt-cache boundary, so date rollover and timezone changes do not
-invalidate the stable prefix. When available, `session_status` remains the source for exact current time.
+The section lives below the prompt-cache boundary. Omitting the changing date keeps the full
+system prompt stable across day rollover for transports that resend it with conversation history.
+Message envelopes carry their own timestamps; `session_status` supplies the current date and
+exact time when available.
 
 ## System event lines (local by default)
 

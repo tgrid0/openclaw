@@ -469,20 +469,19 @@ function buildOwnerIdentityLine(
 }
 
 function buildTemporalContextSection(params: {
-  userDate?: string;
   userTimezone?: string;
   sessionStatusAvailable: boolean;
 }) {
-  const userDate = params.userDate?.trim();
   const userTimezone = params.userTimezone?.trim();
-  if (!userDate || !userTimezone) {
+  if (!userTimezone) {
     return [];
   }
   return [
     "## Temporal Context",
-    `Current date: ${userDate}`,
     `Time zone: ${userTimezone}`,
-    ...(params.sessionStatusAvailable ? ["For the exact current time, use `session_status`."] : []),
+    ...(params.sessionStatusAvailable
+      ? ["For the current date or exact time, use `session_status`."]
+      : []),
     "",
   ];
 }
@@ -812,7 +811,6 @@ export function buildAgentSystemPrompt(params: {
   toolSummaries?: Record<string, string>;
   modelAliasLines?: string[];
   userTimezone?: string;
-  userDate?: string;
   contextFiles?: EmbeddedContextFile[];
   bootstrapMode?: BootstrapMode;
   bootstrapTruncationNotice?: string;
@@ -1061,7 +1059,6 @@ export function buildAgentSystemPrompt(params: {
     : undefined;
   const reasoningLevel = params.reasoningLevel ?? "off";
   const userTimezone = params.userTimezone?.trim();
-  const userDate = params.userDate?.trim();
   const skillsPrompt = params.skillsPrompt?.trim();
   const heartbeatPrompt = params.heartbeatPrompt?.trim();
   const runtimeInfo = params.runtimeInfo;
@@ -1437,11 +1434,10 @@ export function buildAgentSystemPrompt(params: {
 
   const lines = [stablePrefix];
 
-  // Local date and timezone can change between turns. Keep them at the front of
-  // the volatile suffix so rollover is visible without invalidating the stable prefix.
+  // Timezone and tool availability may change between turns; keep this section
+  // below the shared cache boundary.
   lines.push(
     ...buildTemporalContextSection({
-      userDate,
       userTimezone,
       sessionStatusAvailable: availableTools.has("session_status"),
     }),

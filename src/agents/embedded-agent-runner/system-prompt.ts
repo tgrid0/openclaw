@@ -85,7 +85,6 @@ export function buildEmbeddedSystemPrompt(params: {
   tools: AgentTool[];
   modelAliasLines?: string[];
   userTimezone: string;
-  userDate: string;
   contextFiles?: EmbeddedContextFile[];
   bootstrapMode?: BootstrapMode;
   bootstrapTruncationNotice?: string;
@@ -133,7 +132,6 @@ export function buildEmbeddedSystemPrompt(params: {
     capabilityToolNames: params.capabilityToolNames,
     modelAliasLines: params.modelAliasLines,
     userTimezone: params.userTimezone,
-    userDate: params.userDate,
     contextFiles: params.contextFiles,
     bootstrapMode: params.bootstrapMode,
     bootstrapTruncationNotice: params.bootstrapTruncationNotice,

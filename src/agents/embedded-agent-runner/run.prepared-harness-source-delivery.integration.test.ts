@@ -156,7 +156,6 @@ describe("prepared harness source delivery", () => {
         },
         tools: [],
         userTimezone: "UTC",
-        userDate: "2026-08-11",
       });
     };
     mockedBuildEmbeddedRunPayloads.mockReturnValue([{ text: "Short fallback final" }]);

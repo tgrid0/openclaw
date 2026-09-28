@@ -73,7 +73,6 @@ function buildCommonSystemParams(workspaceDir: string) {
       shell: "zsh",
     },
     userTimezone: "America/Los_Angeles",
-    userDate: "2026-03-16",
     toolNames,
   };
 }
@@ -86,15 +85,12 @@ function buildSystemPrompt(params: {
   contextFiles?: Array<{ path: string; content: string }>;
   silentReplyPromptMode?: "generic" | "none";
 }) {
-  const { runtimeInfo, userTimezone, userDate, toolNames } = buildCommonSystemParams(
-    params.workspaceDir,
-  );
+  const { runtimeInfo, userTimezone, toolNames } = buildCommonSystemParams(params.workspaceDir);
   return buildAgentSystemPrompt({
     workspaceDir: params.workspaceDir,
     extraSystemPrompt: params.extraSystemPrompt,
     runtimeInfo,
     userTimezone,
-    userDate,
     toolNames,
     modelAliasLines: [],
     promptMode: "full",
@@ -183,7 +179,7 @@ function buildToolRichSystemPrompt(params: {
   skillsPrompt: string;
   contextFiles: Array<{ path: string; content: string }>;
 }) {
-  const { runtimeInfo, userTimezone, userDate } = buildCommonSystemParams(params.workspaceDir);
+  const { runtimeInfo, userTimezone } = buildCommonSystemParams(params.workspaceDir);
   const tools = [
     "bash",
     "read",
@@ -204,7 +200,6 @@ function buildToolRichSystemPrompt(params: {
     tools,
     modelAliasLines: [],
     userTimezone,
-    userDate,
     acpEnabled: true,
     skillsPrompt: params.skillsPrompt,
     reactionGuidance: { level: "extensive", channel: "Telegram" },

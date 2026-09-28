@@ -41,7 +41,7 @@ import {
   resolveChannelReactionGuidance,
 } from "../channel-tools.js";
 import { resolveConversationCapabilityProfile } from "../conversation-capability-profile.js";
-import { formatDateStamp, resolveUserTimezone } from "../date-time.js";
+import { resolveUserTimezone } from "../date-time.js";
 import { resolveOpenClawReferencePaths } from "../docs-path.js";
 import { resolveHeartbeatPromptForSystemPrompt } from "../heartbeat-system-prompt.js";
 import { prepareAgentMemoryPrompt } from "../memory-prompt-prepare.js";
@@ -507,7 +507,6 @@ export async function buildPreparedCompactionRuntime(prepared: DirectCompactionP
       model: effectiveModel,
     });
     const userTimezone = resolveUserTimezone(params.config?.agents?.defaults?.userTimezone);
-    const userDate = formatDateStamp(Date.now(), userTimezone);
     const promptSurface = resolveAgentPromptSurfaceForSessionKey(params.sessionKey);
     const promptMode =
       isSubagentSessionKey(params.sessionKey) || isCronSessionKey(params.sessionKey)
@@ -589,7 +588,6 @@ export async function buildPreparedCompactionRuntime(prepared: DirectCompactionP
         sandboxInfo,
         tools: effectiveTools,
         userTimezone,
-        userDate,
         contextFiles,
         activeProjectKeys,
         preparedMemoryPrompt,

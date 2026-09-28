@@ -1,7 +1,7 @@
 import { SYSTEM_PROMPT_CACHE_BOUNDARY } from "@openclaw/ai/internal/shared";
 // System prompt tests cover the main prompt facade, prompt-surface routing, and
 // user-visible sections for owners, tools, safety, skills, and subagents.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SILENT_REPLY_TOKEN } from "../auto-reply/tokens.js";
 import { CHANNEL_IDS } from "../channels/ids.js";
 import {
@@ -16,9 +16,36 @@ import { resolveOwnerPromptNumbers } from "./owner-display.js";
 import { resolveAgentPromptSurfaceForSessionKey } from "./prompt-surface.js";
 import { buildSkillWorkshopPromptSection } from "./skill-workshop-prompt.js";
 import { buildSubagentSystemPrompt } from "./subagents/spawn/subagent-system-prompt.js";
+import { buildSystemPromptParams } from "./system-prompt-params.js";
 import { buildAgentSystemPrompt } from "./system-prompt.js";
 
 describe("buildAgentSystemPrompt", () => {
+  it("keeps the system prompt unchanged when the local date rolls over", () => {
+    vi.useFakeTimers();
+    try {
+      const render = () =>
+        buildAgentSystemPrompt({
+          workspaceDir: "/tmp/openclaw",
+          toolNames: ["session_status"],
+          ...buildSystemPromptParams({
+            config: { agents: { defaults: { userTimezone: "UTC" } } },
+            preparedRepoRoot: null,
+            runtime: { host: "host", os: "os", arch: "arch", node: "node", model: "model" },
+          }),
+        });
+      vi.setSystemTime(new Date("2026-09-27T23:59:00.000Z"));
+      const beforeMidnight = render();
+      vi.setSystemTime(new Date("2026-09-28T00:01:00.000Z"));
+      const afterMidnight = render();
+
+      expect(afterMidnight).toBe(beforeMidnight);
+      expect(afterMidnight).toContain("Time zone: UTC");
+      expect(afterMidnight).toContain("For the current date or exact time, use `session_status`.");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("resolves helper session keys to scoped prompt surfaces", () => {
     expect(resolveAgentPromptSurfaceForSessionKey("agent:main:subagent:child")).toBe("subagent");
     expect(resolveAgentPromptSurfaceForSessionKey("agent:codex:acp:child")).toBe("acp_backend");
@@ -915,71 +942,60 @@ describe("buildAgentSystemPrompt", () => {
     expect(prompt).not.toContain("bootstrapMaxChars");
   });
 
-  it("shows the current local date and timezone", () => {
+  it("shows the local timezone without a changing date", () => {
     const prompt = buildAgentSystemPrompt({
       workspaceDir: "/tmp/openclaw",
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
 
     expect(prompt).toContain("## Temporal Context");
-    expect(prompt).toContain("Current date: 2026-01-05");
     expect(prompt).toContain("Time zone: America/Chicago");
+    expect(prompt).not.toContain("Current date:");
   });
 
   it("points to session_status for exact time only when the tool is available", () => {
     const withStatus = buildAgentSystemPrompt({
       workspaceDir: "/tmp/clawd",
       toolNames: ["session_status"],
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
     const withoutStatus = buildAgentSystemPrompt({
       workspaceDir: "/tmp/clawd",
       toolNames: ["exec"],
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
 
-    expect(withStatus).toContain("For the exact current time, use `session_status`.");
+    expect(withStatus).toContain("For the current date or exact time, use `session_status`.");
     expect(withoutStatus).not.toContain("session_status");
   });
 
   it("does not inject a live clock into temporal context", () => {
     const prompt = buildAgentSystemPrompt({
       workspaceDir: "/tmp/clawd",
-      userDate: "2026-01-05",
       userTimezone: "America/Chicago",
     });
 
-    expect(prompt).toContain("Current date: 2026-01-05");
     expect(prompt).toContain("Time zone: America/Chicago");
     expect(prompt).not.toContain("3:26 PM");
     expect(prompt).not.toContain("15:26");
   });
 
-  it("keeps date rollover and timezone changes below the prompt-cache boundary", () => {
-    const buildPrompt = (userDate: string, userTimezone: string) =>
+  it("keeps timezone changes below the prompt-cache boundary", () => {
+    const buildPrompt = (userTimezone: string) =>
       buildAgentSystemPrompt({
         workspaceDir: "/tmp/clawd",
         toolNames: ["session_status"],
-        userDate,
         userTimezone,
       });
-    const first = buildPrompt("2026-01-05", "America/Chicago");
-    const nextDay = buildPrompt("2026-01-06", "America/Chicago");
-    const nextZone = buildPrompt("2026-01-06", "Asia/Tokyo");
+    const first = buildPrompt("America/Chicago");
+    const nextZone = buildPrompt("Asia/Tokyo");
     const stablePrefix = (prompt: string) =>
       prompt.slice(0, prompt.indexOf(SYSTEM_PROMPT_CACHE_BOUNDARY));
     const volatileSuffix = (prompt: string) =>
       prompt.slice(prompt.indexOf(SYSTEM_PROMPT_CACHE_BOUNDARY));
 
-    expect(stablePrefix(first)).toBe(stablePrefix(nextDay));
     expect(stablePrefix(first)).toBe(stablePrefix(nextZone));
-    expect(stablePrefix(first)).not.toContain("2026-01-05");
     expect(stablePrefix(first)).not.toContain("America/Chicago");
-    expect(volatileSuffix(first)).toContain("Current date: 2026-01-05");
-    expect(volatileSuffix(nextDay)).toContain("Current date: 2026-01-06");
     expect(volatileSuffix(nextZone)).toContain("Time zone: Asia/Tokyo");
   });
 
