@@ -24,7 +24,6 @@ import {
 } from "./openclaw-tools.media-factory-plan.js";
 import { createMediaGenerationAsyncStartCallback } from "./openclaw-tools.media-yield.js";
 import { applyNodesToolWorkspaceGuard } from "./openclaw-tools.nodes-workspace-guard.js";
-import type { OpenClawToolsOptions } from "./openclaw-tools.options.js";
 import {
   collectPresentOpenClawTools,
   shouldIncludeAskUserToolForOpenClawTools,

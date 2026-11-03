@@ -525,7 +525,11 @@ describe("buildGuardedModelFetch", () => {
     });
     await response.text();
 
-    expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(model, undefined, undefined);
+    expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(
+      model,
+      undefined,
+      expect.any(AbortSignal),
+    );
     expect(fetchWithSsrFGuardMock).toHaveBeenCalledTimes(1);
     await vi.waitFor(() => expect(release).toHaveBeenCalledTimes(1));
   });
@@ -590,7 +594,11 @@ describe("buildGuardedModelFetch", () => {
     });
     await response.text();
 
-    expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(model, headers, undefined);
+    expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(
+      model,
+      headers,
+      expect.any(AbortSignal),
+    );
   });
 
   it("passes model request abort signals to local service startup", async () => {
@@ -612,8 +620,14 @@ describe("buildGuardedModelFetch", () => {
     expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(
       model,
       undefined,
-      controller.signal,
+      expect.any(AbortSignal),
     );
+    const startupSignal: AbortSignal = ensureModelProviderLocalServiceMock.mock.calls[0][2];
+    expect(startupSignal.aborted).toBe(false);
+    const reason = new Error("caller cancelled");
+    controller.abort(reason);
+    expect(startupSignal.aborted).toBe(true);
+    expect(startupSignal.reason).toBe(reason);
   });
 
   it("passes model request timeouts to local service startup", async () => {

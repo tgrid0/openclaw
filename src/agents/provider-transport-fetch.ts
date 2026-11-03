@@ -39,7 +39,7 @@ import {
   SECRET_SENTINEL_PATTERN,
   swapSecretSentinelsInText,
 } from "../secrets/sentinel.js";
-import { isLocalProviderBaseUrl } from "./embedded-agent-runner/run/llm-idle-timeout.js";
+import { isLocalProviderBaseUrl } from "./model-provider-local.js";
 import { ProviderHttpError, readResponseTextLimited } from "./provider-http-errors.js";
 import {
   ensureModelProviderLocalService,
