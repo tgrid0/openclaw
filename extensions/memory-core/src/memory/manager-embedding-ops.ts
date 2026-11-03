@@ -74,6 +74,7 @@ import {
 import { logMemoryVectorDegradedWrite } from "./manager-vector-warning.js";
 import { replaceMemoryVectorRow } from "./manager-vector-write.js";
 import { resolveMemoryPathClassification } from "./memory-path-provenance.js";
+import { DEFAULT_MEMORY_SEARCH_TIMEOUT_MS } from "./search-deadline.js";
 
 const VECTOR_TABLE = MEMORY_INDEX_VECTOR_TABLE;
 const FTS_TABLE = MEMORY_INDEX_FTS_TABLE;
@@ -83,8 +84,6 @@ const EMBEDDING_INDEX_CONCURRENCY = 4;
 const EMBEDDING_RETRY_MAX_ATTEMPTS = 3;
 const EMBEDDING_RETRY_BASE_DELAY_MS = 500;
 const EMBEDDING_RETRY_MAX_DELAY_MS = 8000;
-const EMBEDDING_QUERY_TIMEOUT_REMOTE_MS = 60_000;
-const EMBEDDING_QUERY_TIMEOUT_LOCAL_MS = 5 * 60_000;
 const EMBEDDING_BATCH_TIMEOUT_REMOTE_MS = 2 * 60_000;
 const EMBEDDING_BATCH_TIMEOUT_LOCAL_MS = 10 * 60_000;
 const SOURCE_WIDE_BATCH_MAX_FILES = 2048;
@@ -235,11 +234,9 @@ function resolveEmbeddingTimeoutMs(params: {
   if (params.kind === "query") {
     const runtimeTimeoutMs = params.providerRuntime?.inlineQueryTimeoutMs;
     if (typeof runtimeTimeoutMs === "number" && runtimeTimeoutMs > 0) {
-      return resolveTimerTimeoutMs(runtimeTimeoutMs, EMBEDDING_QUERY_TIMEOUT_REMOTE_MS);
+      return resolveTimerTimeoutMs(runtimeTimeoutMs, DEFAULT_MEMORY_SEARCH_TIMEOUT_MS);
     }
-    return params.providerId === "local"
-      ? EMBEDDING_QUERY_TIMEOUT_LOCAL_MS
-      : EMBEDDING_QUERY_TIMEOUT_REMOTE_MS;
+    return DEFAULT_MEMORY_SEARCH_TIMEOUT_MS;
   }
 
   const configuredTimeoutSeconds = params.configuredBatchTimeoutSeconds;

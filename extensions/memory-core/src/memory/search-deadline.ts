@@ -1,4 +1,6 @@
-export const DEFAULT_MEMORY_SEARCH_TIMEOUT_MS = 15_000;
+// Match this branch's default LLM watchdog; slow embedding queries must not
+// be cut short by the outer memory-search deadline.
+export const DEFAULT_MEMORY_SEARCH_TIMEOUT_MS = 36_000_000;
 export function resolveMemorySearchAbortError(signal: AbortSignal): Error {
   const { reason } = signal;
   if (reason instanceof Error) {
