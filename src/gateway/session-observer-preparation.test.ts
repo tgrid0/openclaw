@@ -99,7 +99,8 @@ describe("session observer model preparation", () => {
         expect.objectContaining({
           ...prepared,
           purpose: "session-observer",
-          timeoutMs: 30_000,
+          timeoutMs: 36_000_000,
+          answerTokenBudget: 4_096,
           abortSignal: expect.any(AbortSignal),
         }),
       );
@@ -149,7 +150,7 @@ describe("session observer model preparation", () => {
     const harness = createHarness({ prepareModel });
     startAndAddToolNotes(harness.observer);
 
-    await vi.advanceTimersByTimeAsync(34_000);
+    await vi.advanceTimersByTimeAsync(12_000 + 36_000_000);
     await flushObserver();
 
     expect(prepareModel).toHaveBeenCalledOnce();

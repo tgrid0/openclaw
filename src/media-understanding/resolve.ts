@@ -65,7 +65,7 @@ export function resolveCliModelEntry(
   return ok({ command, args });
 }
 
-const DEFAULT_MEDIA_RUNTIME_TIMEOUT_MS = 30_000;
+const DEFAULT_MEDIA_RUNTIME_TIMEOUT_MS = 36_000_000;
 const MIN_MEDIA_TIMEOUT_MS = 1000;
 
 /** Converts configured timeout seconds into a timer-safe millisecond deadline. */

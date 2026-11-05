@@ -1,9 +1,27 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isMemorySearchDeadlineError, runMemorySearchWithDeadline } from "./search-deadline.js";
+import {
+  DEFAULT_MEMORY_SEARCH_TIMEOUT_MS,
+  isMemorySearchDeadlineError,
+  runMemorySearchWithDeadline,
+} from "./search-deadline.js";
 
 describe("runMemorySearchWithDeadline", () => {
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("allows slow searches until the branch's ten-hour LLM deadline", async () => {
+    vi.useFakeTimers();
+    const result = runMemorySearchWithDeadline({
+      timeoutMs: DEFAULT_MEMORY_SEARCH_TIMEOUT_MS,
+      run: async () => await new Promise(() => {}),
+    });
+    const assertion = expect(result).rejects.toThrow("memory_search timed out after 36000s");
+    await vi.advanceTimersByTimeAsync(36_000_000 - 1);
+    expect(vi.getTimerCount()).toBe(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await assertion;
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("clears its timer and parent abort listener after success", async () => {

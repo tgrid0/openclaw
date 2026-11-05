@@ -37,7 +37,7 @@ import type { ResolvedTtsConfig, ResolvedTtsModelOverrides } from "./tts-types.j
 export type { ResolvedTtsConfig, ResolvedTtsModelOverrides };
 export { readTtsPrefs, type TtsUserPrefs } from "./tts-config.js";
 
-export const DEFAULT_TTS_TIMEOUT_MS = 30_000;
+export const DEFAULT_TTS_TIMEOUT_MS = 36_000_000;
 const DEFAULT_TTS_MAX_LENGTH = 1500;
 const DEFAULT_TTS_SUMMARIZE = true;
 let machinePrefsPathResolver: () => string | undefined = () => undefined;

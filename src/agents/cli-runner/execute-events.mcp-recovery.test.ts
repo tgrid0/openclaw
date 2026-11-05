@@ -49,6 +49,6 @@ it("keeps a managed Claude MCP call alive through its enforced response timeout"
   await waitForDiagnosticEventsDrained();
   vi.setSystemTime(now + 900_000);
   const activity = getDiagnosticSessionActivitySnapshot(context.params, now + 900_000);
-  expect(activity.activeToolDeadlineAtMs).toBe(now + 3_610_000 + 900_000);
-  expect(resolveRunStaleThresholdMs(activity, 900_000)).toBe(4_510_000);
+  expect(activity.activeToolDeadlineAtMs).toBe(now + 3_610_000 + 36_000_000);
+  expect(resolveRunStaleThresholdMs(activity, 900_000)).toBe(39_610_000);
 });

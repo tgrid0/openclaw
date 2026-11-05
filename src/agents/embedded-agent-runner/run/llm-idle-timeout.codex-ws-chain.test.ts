@@ -422,14 +422,14 @@ describe("codex websocket idle watchdog through the embedded runner chain", () =
       onIdleTimeout,
     });
     expect(strategy).toBe("openclaw-native-codex-responses");
-    expect([idleTimeoutMs, firstEventTimeoutMs]).toEqual([120_000, 120_000]);
+    expect([idleTimeoutMs, firstEventTimeoutMs]).toEqual([3_600_000, 3_600_000]);
 
     const consumed = consumeLikeAgentCore(streamFn, runAbort.signal);
     await vi.advanceTimersByTimeAsync(10);
     const socket = ControlledWebSocket.instances[0];
     expect(socket?.sent).toHaveLength(1);
 
-    await vi.advanceTimersByTimeAsync(119_000);
+    await vi.advanceTimersByTimeAsync(3_599_000);
     expect(onIdleTimeout).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(2_000);
     expect(onIdleTimeout).toHaveBeenCalledTimes(1);
@@ -486,7 +486,7 @@ describe("codex websocket idle watchdog through the embedded runner chain", () =
     expect(ControlledWebSocket.instances).toHaveLength(1);
     expect(ControlledWebSocket.instances[0]?.sent).toHaveLength(2);
 
-    await vi.advanceTimersByTimeAsync(119_000);
+    await vi.advanceTimersByTimeAsync(3_599_000);
     expect(onIdleTimeout).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(2_000);
     expect(onIdleTimeout).toHaveBeenCalledTimes(1);
@@ -526,7 +526,7 @@ describe("codex websocket idle watchdog through the embedded runner chain", () =
     });
     await vi.advanceTimersByTimeAsync(10);
     await emitEntered.promise;
-    await vi.advanceTimersByTimeAsync(119_000);
+    await vi.advanceTimersByTimeAsync(3_599_000);
     expect(onIdleTimeout).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(2_000);
     // The consumer is still parked; the dead socket is aborted anyway.
@@ -573,11 +573,11 @@ describe("codex websocket idle watchdog through the embedded runner chain", () =
     await vi.advanceTimersByTimeAsync(10);
     await emitEntered.promise;
     const socket = ControlledWebSocket.instances[0];
-    // The provider keeps streaming bookkeeping frames every 60s (under the 120s budget).
+    // Bookkeeping frames arrive every 30 minutes, below the explicit one-hour run budget.
     const progress = setInterval(() => {
       socket?.deliver({ type: "response.in_progress", response: { id: "resp_f" } });
-    }, 60_000);
-    await vi.advanceTimersByTimeAsync(300_000);
+    }, 1_800_000);
+    await vi.advanceTimersByTimeAsync(9_000_000);
     clearInterval(progress);
     expect(onIdleTimeout).not.toHaveBeenCalled();
 

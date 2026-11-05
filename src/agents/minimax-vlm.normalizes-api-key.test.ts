@@ -66,6 +66,7 @@ describe("minimaxUnderstandImage apiKey normalization", () => {
     const opts = fetchWithSsrFGuardMock.mock.calls[0]?.[0];
     const auth = new Headers(opts?.init?.headers).get("Authorization");
     expect(auth).toBe("Bearer minimax-test-key");
+    expect(opts?.timeoutMs).toBe(36_000_000);
   }
 
   it("strips embedded CR/LF before sending Authorization header", async () => {

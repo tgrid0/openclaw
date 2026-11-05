@@ -278,9 +278,8 @@ export async function detectSetupInference(
     recommendedInstalls: listRecommendedToolInstalls(),
   };
   const controller = new AbortController();
-  // Preserve the shipped 30s discovery allowance.
   // This bounds asynchronous discovery; synchronous plugin loading shares the event loop.
-  const timeoutMs = 30_000;
+  const timeoutMs = 36_000_000;
   return await raceWithTimeout(
     () =>
       discoverSetupInference(prepared, deps, controller.signal, (detection) => {

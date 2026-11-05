@@ -597,7 +597,7 @@ const deliverTelegramDirectMessageCompletion = (params: DeliveryFixtureParams) =
   deliverFixture("telegram", params);
 
 describe("deliverSubagentAnnouncement active requester steering", () => {
-  const sharedStore = "/stores/shared.sqlite";
+  const sharedStore = path.resolve("/stores/shared.sqlite");
   const configuredAgents: NonNullable<OpenClawConfig["agents"]> = {
     ownership: "explicit",
     entries: { ops: {}, research: {} },
@@ -751,7 +751,7 @@ describe("deliverSubagentAnnouncement active requester steering", () => {
         steeringMode: "all",
         debounceMs: 500,
         waitForTranscriptCommit: true,
-        deliveryTimeoutMs: 120_000,
+        deliveryTimeoutMs: 36_000_000,
       }),
     );
   });

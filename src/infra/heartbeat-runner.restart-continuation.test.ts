@@ -33,7 +33,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it("keeps recovered work on the ordinary budget and periodic heartbeats on 600 seconds", async () => {
+it("keeps recovered work on the ordinary budget and periodic heartbeats on their cadence", async () => {
   await withOpenClawTestState(
     { label: "restart-continuation-budget", env: { OPENCLAW_TEST_FAST: "0" } },
     async (state) => {
@@ -134,7 +134,10 @@ it("keeps recovered work on the ordinary budget and periodic heartbeats on 600 s
         }),
       ).toMatchObject({ status: "ran" });
       expect(model).toHaveBeenCalledOnce();
-      expect(model.mock.calls[0]?.[0]).toMatchObject({ trigger: "heartbeat", timeoutMs: 600_000 });
+      expect(model.mock.calls[0]?.[0]).toMatchObject({
+        trigger: "heartbeat",
+        timeoutMs: 1_800_000,
+      });
     },
   );
 });

@@ -148,9 +148,9 @@ export const PluginEntrySchema = z.strictObject({
        */
       allowConversationAccess: z.boolean().optional(),
       /** Default timeout in milliseconds for this plugin's typed hooks. */
-      timeoutMs: z.number().int().positive().max(600_000).optional(),
+      timeoutMs: z.number().int().positive().max(36_000_000).optional(),
       /** Per typed-hook timeout overrides in milliseconds. */
-      timeouts: z.record(z.string(), z.number().int().positive().max(600_000)).optional(),
+      timeouts: z.record(z.string(), z.number().int().positive().max(36_000_000)).optional(),
     })
     .optional(),
   subagent: z

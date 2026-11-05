@@ -27,7 +27,7 @@ import {
 } from "./simple-completion-runtime.js";
 import { coerceToolModelConfig } from "./tools/model-config.helpers.js";
 
-const DEFAULT_EXEC_REVIEWER_TIMEOUT_MS = 30_000;
+const DEFAULT_EXEC_REVIEWER_TIMEOUT_MS = 36_000_000;
 const EXEC_REVIEWER_MAX_TOKENS = 1_024;
 const MAX_EXEC_REVIEWER_INPUT_CHARS = 16_000;
 const EXEC_REVIEWER_TIMEOUT = Symbol("exec-reviewer-timeout");

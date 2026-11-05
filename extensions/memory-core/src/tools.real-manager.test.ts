@@ -427,18 +427,18 @@ describe("memory_search real manager", () => {
     try {
       await queryEntered.promise;
       await partialStatusReady.promise;
-      await vi.advanceTimersByTimeAsync(30_000);
+      await vi.advanceTimersByTimeAsync(36_000_000);
       const result = await execution;
       expect(result.details).toMatchObject({
         results: [expect.objectContaining({ path: memoryPath, source: "memory" })],
         partial: true,
         timedOut: true,
-        timeoutMs: 30_000,
+        timeoutMs: 36_000_000,
         mode: "keyword-only",
         warning: expect.stringContaining("Only memory-file keyword matches"),
-        error: "memory_search timed out after 30s",
+        error: "memory_search timed out after 36000s",
         corpora: [{ corpus: "memory", outcome: "partial" }],
-        debug: { searchMs: 30_000 },
+        debug: { searchMs: 36_000_000 },
       });
       expect(result.details).not.toHaveProperty("unavailable");
     } finally {
@@ -471,7 +471,7 @@ describe("memory_search real manager", () => {
     const execution = tool.execute("cold-start-readiness", zebraQuery);
     try {
       await acquisitionStarted.promise;
-      await vi.advanceTimersByTimeAsync(70_000);
+      await vi.advanceTimersByTimeAsync(36_070_000);
       acquisitionReady.resolve();
       const result = await execution;
       expect(result.details).toMatchObject({
@@ -588,7 +588,7 @@ describe("memory_search real manager", () => {
     });
     try {
       await searchStarted.promise;
-      await vi.advanceTimersByTimeAsync(30_100);
+      await vi.advanceTimersByTimeAsync(36_000_100);
       expect(executionSettled).toBe(true);
       await cleanupStarted.promise;
       await expect(execution).resolves.toMatchObject({

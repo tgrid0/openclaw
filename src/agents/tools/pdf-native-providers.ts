@@ -18,7 +18,7 @@ import { resolveProviderTransportSsrFPolicy } from "../provider-network-policy.j
 import type { ModelProviderRequestTransportOverrides } from "../provider-request-config.types.js";
 import { unwrapSecretSentinelsForProviderEgress } from "../provider-secret-egress.js";
 
-const NATIVE_PDF_PROVIDER_FETCH_TIMEOUT_MS = 120_000;
+const NATIVE_PDF_PROVIDER_FETCH_TIMEOUT_MS = 36_000_000;
 const NATIVE_PDF_ERROR_BODY_MAX_BYTES = 8 * 1024;
 const NATIVE_PDF_ERROR_BODY_MAX_CHARS = 400;
 

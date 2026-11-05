@@ -129,14 +129,14 @@ describe("memory_search unavailable payloads", () => {
     let searchCalls = 0;
     setMemorySearchImpl(async () => {
       searchCalls += 1;
-      throw new Error("memory_search timed out after 30s");
+      throw new Error("memory_search timed out after 36000s");
     });
 
     const tool = createMemorySearchToolOrThrow();
     const result = await tool.execute("provider-worded-like-deadline", { query: "hello" });
     expect(result.details).not.toHaveProperty("timedOut");
     expectUnavailableMemorySearchDetails(result.details, {
-      error: "memory_search timed out after 30s",
+      error: "memory_search timed out after 36000s",
       warning: "Memory search is unavailable due to an embedding/provider error.",
       action: "Check embedding provider configuration and retry memory_search.",
     });
@@ -167,15 +167,15 @@ describe("memory_search unavailable payloads", () => {
       const tool = createMemorySearchToolOrThrow();
 
       const resultPromise = tool.execute("search-timeout", { query: "hello" });
-      await vi.advanceTimersByTimeAsync(29_999);
+      await vi.advanceTimersByTimeAsync(36_000_000 - 1);
       expect(searchSignal?.aborted).toBe(false);
       await vi.advanceTimersByTimeAsync(1);
 
       const result = await resultPromise;
-      expect(result.details).toMatchObject({ timedOut: true, timeoutMs: 30_000 });
+      expect(result.details).toMatchObject({ timedOut: true, timeoutMs: 36_000_000 });
       expectUnavailableMemorySearchDetails(result.details, {
-        error: "memory_search timed out after 30s",
-        timeoutMs: 30_000,
+        error: "memory_search timed out after 36000s",
+        timeoutMs: 36_000_000,
         warning: "Memory search did not finish within its time limit.",
         action:
           "Retry memory_search after a short wait: a memory-corpus timeout pauses retries for up to a minute. If memory-corpus timeouts persist, run: openclaw memory status --deep --agent main, and rebuild with openclaw memory index --force --agent main only if it reports the index dirty or incomplete",

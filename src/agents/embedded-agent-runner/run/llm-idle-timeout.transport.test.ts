@@ -14,6 +14,7 @@ import {
 } from "../../../../test/helpers/promise.js";
 import { loadBundledPluginFacade } from "../../../test-utils/bundled-plugin-public-surface.js";
 import { reserveTestPortListener } from "../../../test-utils/port-claims.js";
+import { resolveModelRequestTimeoutMs } from "../../provider-transport-fetch.js";
 import type { StreamFn } from "../../runtime/index.js";
 import { recoverAfterTransportDrop } from "./attempt-recovery.test-support.js";
 import {
@@ -90,7 +91,8 @@ async function openRequest(api: Api, modelRequestTimeoutMs?: number, runTimeoutM
   const options: NonNullable<Parameters<StreamFn>[2]> & FirstStreamEventInternalOptions = {
     apiKey: "test-key",
     signal: controller.signal,
-    timeoutMs: modelRequestTimeoutMs,
+    // Raw SDK streams need the host's request budget as well as the outer watchdog.
+    timeoutMs: resolveModelRequestTimeoutMs(model, modelRequestTimeoutMs),
     firstEventTimeoutMs: firstMs,
     onFirstEventTimeout: onTimeout,
     onResponse: () => accepted.resolve(),
@@ -118,7 +120,7 @@ async function openRequest(api: Api, modelRequestTimeoutMs?: number, runTimeoutM
 
 describe("provider header deadline", () => {
   it.for(Object.keys(providers) as Api[])(
-    "aborts a local %s request with no response headers at 300 seconds",
+    "aborts a local %s request with no response headers at ten hours",
     async (api, { signal }) => {
       vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
       const stream = await openRequest(api);
@@ -132,11 +134,11 @@ describe("provider header deadline", () => {
           signal,
         );
         expect(response.headersSent).toBe(false);
-        await vi.advanceTimersByTimeAsync(299_999);
+        await vi.advanceTimersByTimeAsync(35_999_999);
         expect(stream.onTimeout).not.toHaveBeenCalled();
         await vi.advanceTimersByTimeAsync(1);
         expect(stream.onTimeout).toHaveBeenCalledExactlyOnceWith(
-          expect.objectContaining({ message: "LLM idle timeout (300s): no response from model" }),
+          expect.objectContaining({ message: "LLM idle timeout (36000s): no response from model" }),
         );
         expect(await withinTest(stream.completion, signal)).toBe(
           stream.onTimeout.mock.calls[0]?.[0],
@@ -172,7 +174,7 @@ describe("provider header deadline", () => {
   );
 
   it.for([
-    { providerMs: undefined, runMs: 900_000, expectedMs: 300_000 },
+    { providerMs: undefined, runMs: 900_000, expectedMs: 900_000 },
     { providerMs: 900_000, runMs: undefined, expectedMs: 900_000 },
   ])(
     "keeps the header budget at $expectedMs ms",
@@ -254,14 +256,14 @@ describe("provider header deadline", () => {
 
   it("preserves the OpenAI first-SSE deadline after headers", async ({ signal }) => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    const stream = await openRequest("openai-responses");
+    const stream = await openRequest("openai-responses", undefined, 900_000);
     try {
       const response = await withinTest(stream.request.promise, signal);
       await vi.advanceTimersByTimeAsync(200_000);
       response.writeHead(200, { "content-type": "text/event-stream" });
       response.write('data: {"type":');
       await withinTest(stream.accepted.promise, signal);
-      await vi.advanceTimersByTimeAsync(299_999);
+      await vi.advanceTimersByTimeAsync(899_999);
       expect(stream.onTimeout).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(1);
       expect(stream.onTimeout).toHaveBeenCalledExactlyOnceWith(

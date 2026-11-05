@@ -25,13 +25,12 @@ import type { MutableAssistantMessageEventStream } from "../../stream-compat.js"
 import { createStreamIteratorWrapper } from "../../stream-iterator-wrapper.js";
 import { abortable } from "./abortable.js";
 
-const DEFAULT_LLM_IDLE_TIMEOUT_MS = 120_000;
-const SELF_HOSTED_LLM_IDLE_TIMEOUT_MS = 300_000;
+const DEFAULT_LLM_IDLE_TIMEOUT_MS = 36_000_000;
+const SELF_HOSTED_LLM_IDLE_TIMEOUT_MS = 36_000_000;
 const CLOUD_LLM_FIRST_EVENT_TIMEOUT_MS = DEFAULT_LLM_IDLE_TIMEOUT_MS;
-const LOCAL_LLM_FIRST_EVENT_TIMEOUT_MS = 300_000;
-// Cron has its own outer watchdog; stream stalls must fail early enough for
-// the existing model fallback chain to try the next configured candidate.
-const CRON_LLM_IDLE_TIMEOUT_MS = 60_000;
+const LOCAL_LLM_FIRST_EVENT_TIMEOUT_MS = 36_000_000;
+// Cron retains an independent stream-stall budget, bounded by its outer run timeout.
+const CRON_LLM_IDLE_TIMEOUT_MS = 36_000_000;
 const LOCAL_PROVIDER_AUTH_MARKERS = new Set(["custom-local", "ollama-local"]);
 const SELF_HOSTED_PROVIDER_ID_PREFIXES = ["ollama", "lmstudio", "vllm", "sglang", "llama-cpp"];
 const EXPLICIT_LOCAL_HOSTNAMES = new Set([
@@ -208,7 +207,7 @@ function resolveLlmTimeoutMs(
   }
   const boundedCron = boundedRunTimeoutMs !== undefined && params?.trigger === "cron";
   // Local endpoints have no idle ceiling. Explicit cron budgets also own
-  // self-hosted stalls; ordinary self-hosted runs retain their 300s tolerance.
+  // self-hosted stalls; ordinary self-hosted runs retain their class timeout.
   if (isLocalRuntimeModel || (boundedCron && isSelfHostedRuntimeModel)) {
     return clampTimeoutMs(budgetMs);
   }

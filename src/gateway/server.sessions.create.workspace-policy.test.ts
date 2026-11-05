@@ -7,7 +7,7 @@ import { truncateUtf16Safe } from "@openclaw/normalization-core/utf16-slice";
 import { afterEach, expect, test, vi } from "vitest";
 import { sanitizeForLog } from "../../packages/terminal-core/src/ansi.js";
 import { captureMethodCall } from "../../test/helpers/capture-method-call.js";
-import { useAutoCleanupTempDirTracker } from "../../test/helpers/temp-dir.js";
+import { createTempDirTracker } from "../../test/helpers/temp-dir.js";
 import { findGitCheckoutRoot } from "../agents/worktrees/git.js";
 import { getRegistryWorktree } from "../agents/worktrees/registry.test-support.js";
 import { managedWorktrees, ManagedWorktreeService } from "../agents/worktrees/service.js";
@@ -27,6 +27,7 @@ import {
   requireNonEmptyString,
 } from "./server.sessions.create.test-support.js";
 import { rpcReq, testState, writeSessionStore } from "./test-helpers.js";
+import { releaseGatewaySessionStoreFixture } from "./test/server-sessions-resources.test-helpers.js";
 import {
   sessionStoreEntry,
   directSessionReq,
@@ -38,7 +39,14 @@ const { createSessionStoreDir, openClient } = setupSessionCreateTestHarness(asyn
   gitWorkspaceTemplate = await createGitWorkspace(makeTempDir("openclaw-session-git-template-"));
 });
 const execFileAsync = promisify(execFile);
-const tempDirs = useAutoCleanupTempDirTracker(afterEach);
+const tempDirs = createTempDirTracker();
+afterEach(async () => {
+  // Authenticated clients retain SQLite identity handles under these separate roots.
+  for (const dir of tempDirs.dirs) {
+    await releaseGatewaySessionStoreFixture(dir);
+  }
+  tempDirs.cleanup();
+});
 const directoryLinkType = process.platform === "win32" ? "junction" : "dir";
 
 async function makeNonGitTempDir(prefix: string): Promise<string> {
@@ -209,20 +217,48 @@ test("sessions.create rejects a write-scoped cwd outside configured workspaces",
   }
 });
 
-test("sessions.create uses a non-git Gateway cwd directly but not as a worktree source", async () => {
-  const cwd = await makeNonGitTempDir("openclaw-session-direct-cwd-");
-  const client = { client: { connect: { scopes: ["operator.admin"] } } as never };
-  const direct = await directSessionReq("sessions.create", { cwd }, client);
-  expect(direct.ok).toBe(true);
-  expect((direct.payload as { entry?: { spawnedCwd?: string } })?.entry?.spawnedCwd).toBe(cwd);
+test.each([
+  { request: { worktree: true }, message: "cannot be combined with worktree=true" },
+  { request: {}, message: "requires cwd" },
+  { request: { cwd: "/workspace", execNode: "test-node" }, message: "cannot target execNode" },
+])("sessions.create adoptCwd $message", async ({ request, message }) => {
+  const { storePath } = await createSessionStoreDir();
+  const key = "agent:main:dashboard:invalid-adopt-cwd";
+  const created = await directSessionReq(
+    "sessions.create",
+    { key, adoptCwd: true, ...request },
+    { client: { connect: { scopes: ["operator.admin"] } } as never },
+  );
 
-  const isolated = await directSessionReq("sessions.create", { cwd, worktree: true }, client);
-  expect(isolated.ok).toBe(false);
-  expect(isolated.error).toMatchObject({
-    code: "INVALID_REQUEST",
-    message: "agent workspace is not a git checkout",
+  expect(created).toMatchObject({
+    ok: false,
+    error: { code: "INVALID_REQUEST", message: `sessions.create adoptCwd ${message}` },
   });
+  expect(loadSessionEntry({ sessionKey: key, storePath })).toBeUndefined();
 });
+
+test.each([false, true])(
+  "sessions.create uses a non-git cwd directly (adoptCwd=%s)",
+  async (adoptCwd) => {
+    const cwd = await makeNonGitTempDir("openclaw-session-direct-cwd-");
+    const client = { client: { connect: { scopes: ["operator.admin"] } } as never };
+    const direct = await directSessionReq<{ entry?: { spawnedCwd?: string; worktree?: unknown } }>(
+      "sessions.create",
+      { cwd, adoptCwd },
+      client,
+    );
+    expect(direct.ok).toBe(true);
+    expect(direct.payload?.entry?.spawnedCwd).toBe(cwd);
+    expect(direct.payload?.entry?.worktree).toBeUndefined();
+
+    const isolated = await directSessionReq("sessions.create", { cwd, worktree: true }, client);
+    expect(isolated.ok).toBe(false);
+    expect(isolated.error).toMatchObject({
+      code: "INVALID_REQUEST",
+      message: "agent workspace is not a git checkout",
+    });
+  },
+);
 
 test("sessions.create keeps its cwd contract absolute-only", async () => {
   const created = await directSessionReq("sessions.create", { cwd: "~/repo" });

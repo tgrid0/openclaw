@@ -173,7 +173,7 @@ export const AgentDefaultsBaseSchema = z.strictObject({
        * When set, compaction uses this model instead of the agent's primary model.
        * Falls back to the primary model when unset. */
       model: z.string().optional(),
-      /** Safety window in seconds for each built-in compaction model request (default: 180). */
+      /** No-progress window in seconds for each built-in compaction model request (default: 36000). */
       timeoutSeconds: z.number().int().positive().optional(),
       /** Pre-compaction memory flush (agentic turn). Default: enabled. */
       memoryFlush: z

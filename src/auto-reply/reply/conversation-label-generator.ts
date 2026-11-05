@@ -15,7 +15,7 @@ import { createDedupeCache } from "../../infra/dedupe.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 
 const DEFAULT_MAX_LABEL_LENGTH = 128;
-const TIMEOUT_MS = 15_000;
+const TIMEOUT_MS = 36_000_000;
 const log = createSubsystemLogger("conversation-label");
 const failureWarnings = createDedupeCache({ ttlMs: 60_000, maxSize: 128 });
 

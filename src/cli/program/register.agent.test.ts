@@ -94,18 +94,18 @@ describe("agent command registration", () => {
     );
   });
 
-  it.each([{ args: "agent --timeout 30 exec fix --timeout 120".split(" "), timeout: "120" }])(
-    "resolves parent and leaf exec options for $args",
-    async ({ args, timeout }) => {
-      await runCli(args);
-      expect(agentExecCommandMock).toHaveBeenCalledWith(
-        "fix",
-        expect.objectContaining({ timeout }),
-        runtime,
-      );
-      expect(agentCliCommandMock).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    { args: "agent --timeout 30 exec fix --timeout 120".split(" "), timeout: "120" },
+    { args: "agent exec fix".split(" "), timeout: "36000" },
+  ])("resolves parent and leaf exec options for $args", async ({ args, timeout }) => {
+    await runCli(args);
+    expect(agentExecCommandMock).toHaveBeenCalledWith(
+      "fix",
+      expect.objectContaining({ timeout }),
+      runtime,
+    );
+    expect(agentCliCommandMock).not.toHaveBeenCalled();
+  });
 
   it.each([
     {

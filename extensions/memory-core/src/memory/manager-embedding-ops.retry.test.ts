@@ -23,7 +23,7 @@ type EmbeddingQueryRetryHarness = {
 
 function createEmbeddingQueryRetryHarness(
   embedQuery: EmbeddingProvider["embed"],
-  timeoutMs = 60_000,
+  timeoutMs?: number,
 ): EmbeddingQueryRetryHarness {
   const provider: EmbeddingProvider = {
     id: "test-provider",
@@ -36,7 +36,8 @@ function createEmbeddingQueryRetryHarness(
   // memory index or acquiring an external embedding provider.
   return Object.assign(Object.create(MemoryManagerEmbeddingOps.prototype), {
     provider,
-    resolveEmbeddingTimeout: () => timeoutMs,
+    settings: { sync: {} },
+    ...(timeoutMs === undefined ? {} : { resolveEmbeddingTimeout: () => timeoutMs }),
     markLocalEmbeddingProviderDegraded: vi.fn(),
   }) as EmbeddingQueryRetryHarness;
 }
@@ -135,7 +136,7 @@ describe("memory embedding query retry cancellation", () => {
       await ready.promise;
       return [1, 0, 0, 0];
     });
-    const manager = createEmbeddingQueryRetryHarness(embedQuery);
+    const manager = createEmbeddingQueryRetryHarness(embedQuery, 60_000);
     const pending = manager.embedQueryWithRetry(
       "search terms",
       undefined,
@@ -157,6 +158,27 @@ describe("memory embedding query retry cancellation", () => {
       await pending.catch(() => {});
     }
   });
+
+  it.each(["test-provider", "local"])(
+    "allows slow %s query embeddings within the branch's ten-hour LLM budget",
+    async (providerId) => {
+      vi.useFakeTimers();
+      let elapsedMs = 0;
+      vi.spyOn(performance, "now").mockImplementation(() => elapsedMs);
+      const embedQuery = vi.fn<EmbeddingProvider["embed"]>(async () => {
+        elapsedMs += 5 * 60_000 + 1;
+        return [1, 0, 0, 0];
+      });
+      const manager = createEmbeddingQueryRetryHarness(embedQuery);
+      manager.provider.id = providerId;
+      const pending = manager.embedQueryWithRetry("search terms");
+      const assertion = expect(pending).resolves.toEqual([1, 0, 0, 0]);
+      await vi.runAllTimersAsync();
+      await assertion;
+      expect(embedQuery).toHaveBeenCalledOnce();
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
 
   it("cancels provider backoff immediately without sending a second request", async () => {
     vi.useFakeTimers();

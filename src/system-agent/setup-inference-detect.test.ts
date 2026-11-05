@@ -418,7 +418,7 @@ describe("setup inference discovery deadline", () => {
       [environmentCandidate],
     );
     const discoverySignal = await hookStarted.promise;
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(36_000_000);
     const result = await detection;
     expect(result.candidates).toEqual([
       expect.objectContaining({ modelRef: "fixture/environment-model" }),
@@ -446,14 +446,14 @@ describe("setup inference discovery deadline", () => {
     });
     const detection = detectWithProvider(async () => null);
     await loading.promise;
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(36_000_000);
     const result = await detection;
     expect(result.candidates).toEqual([]);
     expect(result.authOptions).toContainEqual(expect.objectContaining({ id: "custom-api-key" }));
     expect(vi.getTimerCount(), describePendingFakeTimers()).toBe(0);
   });
 
-  it.each([0, 20_000])(
+  it.each([0, 36_000_000 - 1])(
     "returns discovery completed after %i ms and releases its deadline",
     async (delay) => {
       const started = createDeferred();

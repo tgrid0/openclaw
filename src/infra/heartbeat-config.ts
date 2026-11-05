@@ -16,7 +16,7 @@ import type { HeartbeatWakeSource } from "./heartbeat-wake-contracts.js";
 
 export type HeartbeatConfig = AgentDefaultsConfig["heartbeat"];
 
-const DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 10 * 60;
+const DEFAULT_HEARTBEAT_TIMEOUT_SECONDS = 36000;
 
 type HeartbeatAgent = {
   agentId: string;

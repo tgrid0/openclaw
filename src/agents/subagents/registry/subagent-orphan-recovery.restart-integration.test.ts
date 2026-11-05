@@ -1003,9 +1003,9 @@ describe("subagent orphan recovery — faithful restart path", () => {
       childSessionKey,
       childSessionIdentity: { sessionId: "sess-shared-generation" },
       generation: 1,
-      createdAt: now - 3 * 60 * 60 * 1_000,
-      startedAt: now - 3 * 60 * 60 * 1_000,
-      sessionStartedAt: now - 3 * 60 * 60 * 1_000,
+      createdAt: now - 11 * 60 * 60 * 1_000,
+      startedAt: now - 11 * 60 * 60 * 1_000,
+      sessionStartedAt: now - 11 * 60 * 60 * 1_000,
     });
     const freshRecord = makeRunRecord({
       runId: "run-fresh-generation",

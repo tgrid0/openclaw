@@ -117,50 +117,69 @@ describe("buildGuardedModelFetch", () => {
     {
       name: "caps model metadata",
       timeout: undefined,
+      modelTimeout: Number.MAX_SAFE_INTEGER,
       caller: false,
       expected: MAX_TIMER_TIMEOUT_MS,
     },
     {
       name: "combines an explicit timeout with caller abort",
       timeout: 750,
+      modelTimeout: Number.MAX_SAFE_INTEGER,
       caller: true,
       expected: 750,
     },
-  ])("$name for local startup and guarded fetch", async ({ timeout, caller, expected }) => {
-    const target = { ...localModel, requestTimeoutMs: Number.MAX_SAFE_INTEGER };
-    const timeoutController = new AbortController();
-    const callerController = new AbortController();
-    const combinedController = new AbortController();
-    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
-    const anySpy = vi.spyOn(AbortSignal, "any").mockReturnValue(combinedController.signal);
-    const signal = caller ? callerController.signal : undefined;
-    try {
-      const response = await buildGuardedModelFetch(target, timeout)(
-        `${target.baseUrl}/responses`,
-        {
-          method: "POST",
-          signal,
-        },
-      );
-      await response.text();
-      expect(timeoutSpy).toHaveBeenCalledExactlyOnceWith(expected);
-      expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(
-        target,
-        undefined,
-        caller ? combinedController.signal : timeoutController.signal,
-      );
-      expect(latestGuardedFetchParams().timeoutMs).toBe(expected);
-      expect(latestGuardedFetchParams().signal).toBe(signal);
-      if (caller) {
-        expect(anySpy).toHaveBeenCalledExactlyOnceWith([signal, timeoutController.signal]);
-      } else {
-        expect(anySpy).not.toHaveBeenCalled();
+    {
+      name: "defaults unconfigured local requests to ten hours",
+      timeout: undefined,
+      modelTimeout: undefined,
+      caller: false,
+      expected: 36_000_000,
+    },
+    {
+      name: "defaults invalid local model budgets to ten hours",
+      timeout: undefined,
+      modelTimeout: -1,
+      caller: false,
+      expected: 36_000_000,
+    },
+  ])(
+    "$name for local startup and guarded fetch",
+    async ({ timeout, modelTimeout, caller, expected }) => {
+      const target = { ...localModel, requestTimeoutMs: modelTimeout };
+      const timeoutController = new AbortController();
+      const callerController = new AbortController();
+      const combinedController = new AbortController();
+      const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
+      const anySpy = vi.spyOn(AbortSignal, "any").mockReturnValue(combinedController.signal);
+      const signal = caller ? callerController.signal : undefined;
+      try {
+        const response = await buildGuardedModelFetch(target, timeout)(
+          `${target.baseUrl}/responses`,
+          {
+            method: "POST",
+            signal,
+          },
+        );
+        await response.text();
+        expect(timeoutSpy).toHaveBeenCalledExactlyOnceWith(expected);
+        expect(ensureModelProviderLocalServiceMock).toHaveBeenCalledWith(
+          target,
+          undefined,
+          caller ? combinedController.signal : timeoutController.signal,
+        );
+        expect(latestGuardedFetchParams().timeoutMs).toBe(expected);
+        expect(latestGuardedFetchParams().signal).toBe(signal);
+        if (caller) {
+          expect(anySpy).toHaveBeenCalledExactlyOnceWith([signal, timeoutController.signal]);
+        } else {
+          expect(anySpy).not.toHaveBeenCalled();
+        }
+      } finally {
+        timeoutSpy.mockRestore();
+        anySpy.mockRestore();
       }
-    } finally {
-      timeoutSpy.mockRestore();
-      anySpy.mockRestore();
-    }
-  });
+    },
+  );
 
   it.each([false, true])(
     "scopes provider DNS trust with an explicit dispatcher=%s",

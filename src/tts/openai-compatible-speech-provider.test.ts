@@ -74,9 +74,9 @@ describe("createOpenAiCompatibleSpeechProvider", () => {
   });
 
   it.each([
-    ["global default", undefined, undefined, undefined, 30_000],
+    ["global default", undefined, undefined, undefined, 36_000_000],
     ["provider default", 120_000, undefined, undefined, 120_000],
-    ["explicit global-default value", 120_000, 30_000, undefined, 30_000],
+    ["explicit global-default value", 120_000, 36_000_000, undefined, 36_000_000],
     ["configured timeout", 120_000, 45_000, undefined, 45_000],
     ["per-call timeout", 120_000, 45_000, 5_000, 5_000],
   ] as const)(

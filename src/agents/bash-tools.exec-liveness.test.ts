@@ -116,7 +116,11 @@ describe("registered exec deadline handoff", () => {
     });
     const spawn = vi.spyOn(supervisor, "spawn");
     const { tool, ref } = createWrappedExec("prepared-deadline");
-    const execution = tool.execute("foreground", { command: "sleep 970", timeoutSeconds: 1400 });
+    // The process must outlive the branch's ten-hour recovery floor to prove deadline custody.
+    const execution = tool.execute("foreground", {
+      command: "sleep 37000",
+      timeoutSeconds: 40_000,
+    });
     await preparing.promise;
     await vi.advanceTimersByTimeAsync(30_000);
     await waitForDiagnosticEventsDrained();
@@ -127,7 +131,7 @@ describe("registered exec deadline handoff", () => {
     await spawned.promise;
     await spawn.mock.results[0]?.value;
     await vi.advanceTimersByTimeAsync(0);
-    const deadline = processStartedAt + 1_400_000;
+    const deadline = processStartedAt + 40_000_000;
     const recoveryDeadline = deadline + BLOCKED_TOOL_CALL_ABORT_FLOOR_MS;
     expect(getDiagnosticSessionActivitySnapshot(ref).activeToolDeadlineAtMs).toBe(recoveryDeadline);
 
@@ -161,7 +165,7 @@ describe("registered exec deadline handoff", () => {
     await spawn.mock.results[0]?.value;
     await waitForDiagnosticEventsDrained();
     await vi.advanceTimersByTimeAsync(300_001);
-    expect(child.kill).toHaveBeenCalledWith("SIGTERM");
+    expect(child.kill).toHaveBeenCalledWith(process.platform === "win32" ? "SIGKILL" : "SIGTERM");
     const duringCleanup = getDiagnosticSessionActivitySnapshot(ref);
     expect(resolveRunStaleThresholdMs(duringCleanup)).toBeGreaterThan(
       duringCleanup.lastProgressAgeMs!,

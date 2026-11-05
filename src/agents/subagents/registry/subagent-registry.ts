@@ -79,7 +79,7 @@ const warn = (message: string, meta?: Record<string, unknown>) => log.warn(messa
 
 const completionRetryTimers = new Set<ReturnType<typeof setTimeout>>();
 let activeGatewayContextResolver: GatewayContextResolver | undefined;
-const SUBAGENT_ANNOUNCE_TIMEOUT_MS = 120_000;
+const SUBAGENT_ANNOUNCE_TIMEOUT_MS = 36_000_000;
 const GATEWAY_ADMISSION_RETRY_DELAY_MS = 1_000;
 
 /** Prepare registry hydration before the session owner's synchronous reset commit. */

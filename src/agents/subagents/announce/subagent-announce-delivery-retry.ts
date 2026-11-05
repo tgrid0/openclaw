@@ -10,7 +10,7 @@ import { defaultRuntime } from "../../../runtime.js";
 import { isFailoverError } from "../../failover-error.js";
 import { isSessionTranscriptTurnMismatchErrorMessage } from "../../sessions/transcript-turn-error.js";
 
-const DEFAULT_SUBAGENT_ANNOUNCE_TIMEOUT_MS = 120_000;
+const DEFAULT_SUBAGENT_ANNOUNCE_TIMEOUT_MS = 36_000_000;
 
 export class SourceOwnerChangedError extends Error {
   constructor() {

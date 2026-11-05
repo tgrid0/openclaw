@@ -47,7 +47,7 @@ describe("generateSlugViaLLM", () => {
     expect(requireFirstRunOptions()).toMatchObject({
       disableTools: true,
       toolsAllow: [],
-      timeoutMs: 15_000,
+      timeoutMs: 36_000_000,
       cleanupBundleMcpOnRunEnd: true,
       authProfileFailurePolicy: "local",
       agentId: "molty",

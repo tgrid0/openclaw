@@ -87,6 +87,11 @@ it("keeps configured run options when a direct wake overrides only the destinati
   });
 });
 
+it("caps the default heartbeat reply-run timeout at ten hours", async () => {
+  const { options } = await replyOptions({ heartbeat: { every: "12h" } });
+  expect(options?.timeoutOverrideSeconds).toBe(36000);
+});
+
 it.each([
   ["exec continuation", "exec-event", "exec", false, false, false, 48 * 60 * 60_000],
   ["scheduled exec deferred", "exec-event", "exec", true, false, false, 45_000],

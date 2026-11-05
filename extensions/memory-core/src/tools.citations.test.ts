@@ -260,13 +260,13 @@ describe("memory tools", () => {
       const tool = createMemorySearchToolOrThrow();
       try {
         const pending = tool.execute("stalled-corpus", { query: "alpha", corpus: "all" });
-        await vi.advanceTimersByTimeAsync(30_000);
+        await vi.advanceTimersByTimeAsync(36_000_000);
         const result = await pending;
         const healthy = stalled === "memory" ? "wiki" : "memory";
         const path = stalled === "memory" ? "entities/alpha.md" : "MEMORY.md";
         const corpora = ["memory", "wiki"].map((corpus) =>
           corpus === stalled
-            ? { corpus, outcome: "unavailable", error: "memory_search timed out after 30s" }
+            ? { corpus, outcome: "unavailable", error: "memory_search timed out after 36000s" }
             : { corpus, outcome: "ok" },
         );
         expect(result.details).toMatchObject({
@@ -288,7 +288,7 @@ describe("memory tools", () => {
           });
           expect(retry.details).toHaveProperty(
             "warning",
-            expect.stringContaining("memory_search timed out after 30s"),
+            expect.stringContaining("memory_search timed out after 36000s"),
           );
         }
         expect(search).toHaveBeenCalledTimes(stalled === "memory" ? 1 : 2);
@@ -321,7 +321,7 @@ it("keeps the wiki deadline independent of managed memory readiness", async () =
     const control = options?.[MEMORY_SEARCH_DEADLINE_CONTROL];
     control?.report("pause");
     await new Promise<void>((resolve) => {
-      setTimeout(resolve, 70_000);
+      setTimeout(resolve, 36_070_000);
     });
     control?.report("resume");
     return [primaryHit];
@@ -329,7 +329,7 @@ it("keeps the wiki deadline independent of managed memory readiness", async () =
   registerMemoryCorpusSupplement("memory-wiki", {
     search: async () => {
       await new Promise<void>((resolve) => {
-        setTimeout(resolve, 40_000);
+        setTimeout(resolve, 36_040_000);
       });
       return [supplementHit];
     },
@@ -342,13 +342,13 @@ it("keeps the wiki deadline independent of managed memory readiness", async () =
     },
   });
   const pending = tool.execute("independent-deadlines", { query: "credentials", corpus: "all" });
-  await vi.advanceTimersByTimeAsync(70_000);
+  await vi.advanceTimersByTimeAsync(36_070_000);
   const result = await pending;
   expect(result.details).toMatchObject({
     results: [expect.objectContaining({ path: primaryHit.path, snippet: primaryHit.snippet })],
     corpora: [
       { corpus: "memory", outcome: "ok" },
-      { corpus: "wiki", outcome: "unavailable", error: "memory_search timed out after 30s" },
+      { corpus: "wiki", outcome: "unavailable", error: "memory_search timed out after 36000s" },
     ],
   });
 });

@@ -31,8 +31,8 @@ export function registerSubagentOrphanTaskCases({
           requesterDisplayKey: "main",
           task: "stale unended restored work",
           cleanup: "keep",
-          createdAt: now - 3 * 60 * 60 * 1_000,
-          startedAt: now - 3 * 60 * 60 * 1_000,
+          createdAt: now - 11 * 60 * 60 * 1_000,
+          startedAt: now - 11 * 60 * 60 * 1_000,
         },
       },
     });

@@ -512,24 +512,35 @@ describe("runCliAgent reliability", () => {
     vi.useRealTimers();
   });
 
-  it("does not enqueue watchdog system events for side-question no-output timeouts", async () => {
-    enqueueSessionEventMock.mockClear();
-    supervisorSpawnMock.mockResolvedValueOnce(makeNoOutputTimeoutRun());
-
-    await expect(
-      executePreparedCliRun(
+  it.each([
+    { cliSessionId: undefined, timeoutMs: 40_000_000, noOutputTimeoutMs: 36_000_000 },
+    { cliSessionId: "thread-123", timeoutMs: 40_000_000, noOutputTimeoutMs: 36_000_000 },
+    { cliSessionId: "thread-123", timeoutMs: 600_000, noOutputTimeoutMs: 599_000 },
+  ])(
+    "bounds side-question watchdogs without system events ($timeoutMs, $cliSessionId)",
+    async ({ cliSessionId, timeoutMs, noOutputTimeoutMs }) => {
+      enqueueSessionEventMock.mockClear();
+      supervisorSpawnMock.mockResolvedValueOnce(makeNoOutputTimeoutRun());
+      const context = withParams(
         buildPreparedContext({
           sessionKey: "agent:main:main",
-          cliSessionId: "thread-123",
+          cliSessionId,
           executionMode: "side-question",
           runId: "run-side-question-timeout",
         }),
-        "thread-123",
-      ),
-    ).rejects.toThrow("produced no output");
+        { timeoutMs },
+      );
 
-    expect(enqueueSessionEventMock).not.toHaveBeenCalled();
-  });
+      await expect(executePreparedCliRun(context, cliSessionId)).rejects.toThrow(
+        "produced no output",
+      );
+
+      expect(supervisorSpawnMock).toHaveBeenCalledWith(
+        expect.objectContaining({ noOutputTimeoutMs }),
+      );
+      expect(enqueueSessionEventMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("falls back to cold reseed when Claude lacks the checkpoint flag", async ({
     onTestFinished,

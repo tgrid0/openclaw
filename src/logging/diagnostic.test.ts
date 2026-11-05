@@ -373,7 +373,7 @@ describe("stuck session diagnostics threshold", () => {
     const stuckSessionWarnMs = resolveStuckSessionWarnMs() / 4;
     const stuckSessionAbortMs = resolveStuckSessionAbortMs(stuckSessionWarnMs);
     expect(stuckSessionWarnMs).toBe(30_000);
-    expect(stuckSessionAbortMs).toBe(300_000);
+    expect(stuckSessionAbortMs).toBe(36_000_000);
     startEnabledDiagnosticHeartbeat({
       recoverStuckSession,
       testTimings: { stuckSessionWarnMs, stuckSessionAbortMs },
@@ -414,7 +414,7 @@ describe("stuck session diagnostics threshold", () => {
 
     advanceLaneWithInbound({
       ...session,
-      totalMs: 20 * 60_000,
+      totalMs: 36_000_000,
       inboundEveryMs: 25_000,
     });
 
@@ -432,7 +432,7 @@ describe("stuck session diagnostics threshold", () => {
     expect(stalled.ageMs).toBeGreaterThanOrEqual(15 * 60_000);
     const recovery = requireFirstMockCallArg(recoverStuckSession, "recoverStuckSession");
     expectRecordFields(recovery, { ...session, allowActiveAbort: true });
-    expect(recovery.ageMs).toBeGreaterThanOrEqual(15 * 60_000);
+    expect(recovery.ageMs).toBeGreaterThanOrEqual(36_000_000);
   });
 
   it("keeps a lane with fresh owned progress quiet while inbound keeps arriving", () => {

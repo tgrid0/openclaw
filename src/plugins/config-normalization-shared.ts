@@ -55,7 +55,7 @@ export function normalizePluginConfigList(
 }
 
 function normalizeHookTimeoutMs(value: unknown): number | undefined {
-  return asSafeIntegerInRange(value, { min: 1, max: 600_000 });
+  return asSafeIntegerInRange(value, { min: 1, max: 36_000_000 });
 }
 
 function normalizeHookTimeouts(value: unknown): Record<string, number> | undefined {

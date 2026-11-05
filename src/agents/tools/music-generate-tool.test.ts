@@ -266,9 +266,9 @@ describe("createMusicGenerateTool", () => {
 
     expect(generateMusicOptions()).toMatchObject({
       modelOverride: "music-plugin/deployment",
-      timeoutMs: 180_000,
+      timeoutMs: 36_000_000,
     });
-    expect(detailsOf(result).timeoutMs).toBe(180_000);
+    expect(detailsOf(result).timeoutMs).toBe(36_000_000);
   });
 
   it.each([
@@ -429,6 +429,8 @@ describe("createMusicGenerateTool", () => {
     expect(immediate.replyToId).toBeUndefined();
     expect(immediate.audioAsVoice).toBeUndefined();
     expect(details.lyrics).toEqual(lyrics);
+    expect(details.timeoutMs).toBe(36_000_000);
+    expect(generateMusicOptions().timeoutMs).toBe(36_000_000);
 
     const detached = formatAgentInternalEventsForPrompt([
       {
@@ -525,7 +527,7 @@ describe("createMusicGenerateTool", () => {
 
     expect(text).toContain("Background task started for music generation (task-123).");
     expect(text).toContain("Do not call music_generate again for this request.");
-    expect(text).toContain("Timeout normalized: requested 1000ms; used 120000ms.");
+    expect(text).toContain("Timeout normalized: requested 1000ms; used 36000000ms.");
     expect(onAsyncTaskStarted).toHaveBeenCalledOnce();
     expect(onAsyncTaskStarted).toHaveBeenCalledWith(
       "Music generation started; wait for the generated music completion event.",
@@ -535,12 +537,12 @@ describe("createMusicGenerateTool", () => {
     expect(details.status).toBe("started");
     expect((details.task as { taskId?: unknown }).taskId).toBe("task-123");
     expect(details.instrumental).toBe(true);
-    expect(details.timeoutMs).toBe(120_000);
+    expect(details.timeoutMs).toBe(36_000_000);
     expect(details.requestedTimeoutMs).toBe(1000);
     expect(details.timeoutNormalization).toEqual({
       requested: 1000,
-      applied: 120_000,
-      minimum: 120_000,
+      applied: 36_000_000,
+      minimum: 36_000_000,
     });
     expect((result as { terminate?: boolean }).terminate).toBeUndefined();
     if (!scheduledWork) {
@@ -548,7 +550,7 @@ describe("createMusicGenerateTool", () => {
     }
     await scheduledWork();
     expect(generateMusicOptions().autoProviderFallback).toBe(false);
-    expect(generateMusicOptions().timeoutMs).toBe(120_000);
+    expect(generateMusicOptions().timeoutMs).toBe(36_000_000);
     const progress = taskProgressCall();
     expect(String(progress.runId)).toMatch(/^tool:music_generate:/);
     expect(progress.progressSummary).toBe("Generating music");
@@ -991,7 +993,7 @@ describe("createMusicGenerateTool", () => {
     };
     expect(loadOptions.requestInit?.signal).toBeInstanceOf(AbortSignal);
     expect(loadOptions.ssrfPolicy).toEqual({ allowRfc2544BenchmarkRange: true });
-    expect(generateMusicOptions().timeoutMs).toBe(180_000);
+    expect(generateMusicOptions().timeoutMs).toBe(36_000_000);
     expect(fetchTimeout.buildTimeoutAbortSignal).toHaveBeenCalledTimes(1);
     expect(vi.mocked(fetchTimeout.buildTimeoutAbortSignal).mock.calls[0]?.[0]).toEqual({
       operation: "music-generate.reference-fetch",

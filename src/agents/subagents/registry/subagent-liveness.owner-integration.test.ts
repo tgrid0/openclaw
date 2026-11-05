@@ -67,7 +67,7 @@ beforeEach(() => {
 });
 const parent = "agent:main:liveness-parent";
 const start = Date.parse("2026-09-13T12:00:00Z");
-const olderThanCutoff = start + 2 * 60 * 60 * 1000 + 1;
+const olderThanCutoff = start + 10 * 60 * 60 * 1000 + 1;
 afterEach(async () => {
   await fixture.settle();
   resetCommandQueueStateForTest();
@@ -156,7 +156,7 @@ it("admits new work at the child cap when finished descendants have suspended de
   expect(countActiveRunsForSession(parent)).toBe(5);
 });
 
-it("retains quiet admitted execution in listing, admission count, and requester settlement after two hours", async () => {
+it("retains quiet admitted execution in listing, admission count, and requester settlement after ten hours", async () => {
   const now = vi.spyOn(Date, "now").mockReturnValue(start);
   const entry = await register("quiet-owned");
   const entered = createDeferred();

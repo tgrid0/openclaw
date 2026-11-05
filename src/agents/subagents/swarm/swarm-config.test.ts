@@ -8,7 +8,7 @@ describe("resolveSwarmConfig", () => {
       maxConcurrent: 32,
       maxChildrenPerGroup: 50,
       maxTotalPerGroup: 200,
-      waitTimeoutSecondsMax: 600,
+      waitTimeoutSecondsMax: 36000,
       defaultAgentId: "",
     });
   });
@@ -45,7 +45,7 @@ describe("resolveSwarmConfig", () => {
     { field: "maxConcurrent", fallback: 32, max: 1_000 },
     { field: "maxChildrenPerGroup", fallback: 50, max: 10_000 },
     { field: "maxTotalPerGroup", fallback: 200, max: 100_000 },
-    { field: "waitTimeoutSecondsMax", fallback: 600, max: 86_400 },
+    { field: "waitTimeoutSecondsMax", fallback: 36000, max: 86_400 },
   ] as const)("preserves the documented bounds for $field", ({ field, fallback, max }) => {
     for (const value of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(resolveSwarmConfig({ tools: { swarm: { [field]: value } } })[field]).toBe(fallback);

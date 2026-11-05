@@ -1,6 +1,7 @@
 import { createDeferred } from "openclaw/plugin-sdk/concurrency-runtime";
 
-export const DEFAULT_MEMORY_SEARCH_TIMEOUT_MS = 30_000;
+// Search and query embeddings share the ten-hour default so neither deadline cuts the other short.
+export const DEFAULT_MEMORY_SEARCH_TIMEOUT_MS = 36_000_000;
 export function resolveMemorySearchAbortError(signal: AbortSignal): Error {
   const { reason } = signal;
   if (reason instanceof Error) {

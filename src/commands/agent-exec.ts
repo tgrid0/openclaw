@@ -27,7 +27,7 @@ import {
 } from "./agent-exec-input.js";
 import { classifyAgentExecResult, type AgentExecEnvelope } from "./agent-exec-result.js";
 
-const AGENT_EXEC_DEFAULT_TIMEOUT_SECONDS = 600;
+const AGENT_EXEC_DEFAULT_TIMEOUT_SECONDS = 36000;
 
 type AgentExecCommandResult = {
   envelope: AgentExecEnvelope;

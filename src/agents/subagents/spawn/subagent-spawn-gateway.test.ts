@@ -33,7 +33,7 @@ describe("native subagent Gateway transport ownership", () => {
   it("caps Gateway timer delays without shortening semantic run durations", () => {
     const thirtyDaysSeconds = 30 * 24 * 60 * 60;
 
-    expect(resolveSubagentAgentGatewayTimeoutMs(thirtyDaysSeconds)).toBe(300_000);
+    expect(resolveSubagentAgentGatewayTimeoutMs(thirtyDaysSeconds)).toBe(36_000_000);
     expect(resolveSubagentRunDurationMs(thirtyDaysSeconds)).toBe(2_592_000_000);
   });
 

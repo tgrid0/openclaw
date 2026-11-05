@@ -233,7 +233,7 @@ describe("cron execution watchdogs", () => {
     const catchup = runMissedJobs(state);
     try {
       const signal = await runner.started.promise;
-      await advance(60_100);
+      await advance(36_000_100);
       await catchup;
       expect(signal?.aborted).toBe(true);
       expect(requireJob(state, job.id).state.lastStatus).toBe("error");
@@ -243,7 +243,7 @@ describe("cron execution watchdogs", () => {
       expect(onIsolatedAgentSetupTimeout).toHaveBeenCalledWith({
         job: expect.objectContaining({ id: job.id }),
         error: expect.stringContaining("setup timed out before runner start"),
-        timeoutMs: 60_000,
+        timeoutMs: 36_000_000,
       });
     } finally {
       stop(state);
@@ -335,7 +335,7 @@ describe("cron execution watchdogs", () => {
       settled = true;
     });
     try {
-      await advance(60_100);
+      await advance(36_000_100);
       expect(settled).toBe(false);
       expect(onIsolatedAgentSetupTimeout).not.toHaveBeenCalled();
       release.resolve();
@@ -436,7 +436,7 @@ describe("cron execution watchdogs", () => {
     });
     const timer = onTimer(state);
     const signal = await runner.started.promise;
-    await advance(60_100);
+    await advance(600_100);
     await timer;
     const diagnostic =
       "cron: isolated agent run stalled before execution start (last phase: runtime-plugins)";

@@ -21,9 +21,9 @@ export const DEFAULT_MAX_BYTES: Record<MediaUnderstandingCapability, number> = {
 };
 /** Default request timeout by capability. */
 export const DEFAULT_TIMEOUT_SECONDS: Record<MediaUnderstandingCapability, number> = {
-  image: 60,
-  audio: 60,
-  video: 120,
+  image: 36000,
+  audio: 36000,
+  video: 36000,
 };
 /** Default prompts by capability. */
 export const DEFAULT_PROMPT: Record<MediaUnderstandingCapability, string> = {

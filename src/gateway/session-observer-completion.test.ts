@@ -143,12 +143,12 @@ describe("session observer completion", () => {
     const harness = createHarness({ completeModel });
     startAndAddToolNotes(harness.observer);
     await vi.advanceTimersByTimeAsync(12_000);
-    await vi.advanceTimersByTimeAsync(29_999);
+    await vi.advanceTimersByTimeAsync(36_000_000 - 1);
     expect(signals[0]?.aborted).toBe(false);
     await vi.advanceTimersByTimeAsync(1);
     expect(signals[0]?.aborted).toBe(true);
     expect(completeModel).toHaveBeenCalledTimes(2);
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(36_000_000);
     expect(signals[1]?.aborted).toBe(true);
     await vi.advanceTimersByTimeAsync(60_000);
     expect(completeModel).toHaveBeenCalledTimes(2);

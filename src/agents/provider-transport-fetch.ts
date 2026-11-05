@@ -20,6 +20,7 @@ import type { Model } from "../llm/types.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { resolveDebugProxySettings } from "../proxy-capture/env.js";
 import { isRetryableProviderHttpStatus } from "./failover/retry-evidence.js";
+import { isLocalProviderBaseUrl } from "./model-provider-local.js";
 import {
   ProviderHttpError,
   readResponseTextLimited,
@@ -51,6 +52,9 @@ import {
 
 const DEFAULT_MAX_SDK_RETRY_WAIT_SECONDS = 60;
 const OPENAI_SDK_STREAM_CONTENT_SNIFF_BYTES = 2 * 1024;
+// Local requests need an explicit budget: SDK clients otherwise apply their own
+// shorter default instead of the local runtime's 10-hour allowance.
+const DEFAULT_LOCAL_MODEL_REQUEST_TIMEOUT_MS = 36_000_000;
 const log = createSubsystemLogger("provider-transport-fetch");
 
 const PLAIN_DECIMAL_NUMBER_RE = /^\d+(?:\.\d+)?$/;
@@ -270,10 +274,12 @@ export function resolveModelRequestTimeoutMs(
   model: Model,
   timeoutMs: number | undefined,
 ): number | undefined {
-  return clampPositiveTimerTimeoutMs(
-    timeoutMs === undefined
-      ? (model as { requestTimeoutMs?: unknown }).requestTimeoutMs
-      : timeoutMs,
+  if (timeoutMs !== undefined) {
+    return clampPositiveTimerTimeoutMs(timeoutMs);
+  }
+  return (
+    clampPositiveTimerTimeoutMs((model as { requestTimeoutMs?: unknown }).requestTimeoutMs) ??
+    (isLocalProviderBaseUrl(model.baseUrl) ? DEFAULT_LOCAL_MODEL_REQUEST_TIMEOUT_MS : undefined)
   );
 }
 

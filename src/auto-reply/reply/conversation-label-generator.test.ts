@@ -130,6 +130,7 @@ describe("generateConversationLabel", () => {
       expect(runIsolatedCompletion).toHaveBeenCalledOnce();
       expect(runIsolatedCompletion.mock.calls[0]?.[0]).toMatchObject({
         model: "claude-haiku",
+        timeoutMs: 36_000_000,
         ...(explicit ? {} : { agentHarnessRuntimeOverride: sessionRuntime ?? "claude-cli" }),
       });
       if (explicit) {

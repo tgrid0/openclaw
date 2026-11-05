@@ -19,10 +19,13 @@ function makeJob(payload: CronJob["payload"]): CronJob {
 }
 
 describe("timeout-policy", () => {
-  it("disables timeout when timeoutSeconds <= 0", () => {
+  it.each([
+    { timeoutSeconds: undefined, expected: 36_000_000 },
+    { timeoutSeconds: 0, expected: undefined },
+  ])("resolves agent timeoutSeconds=$timeoutSeconds", ({ timeoutSeconds, expected }) => {
     const timeout = resolveCronJobTimeoutMs(
-      makeJob({ kind: "agentTurn", message: "hi", timeoutSeconds: 0 }),
+      makeJob({ kind: "agentTurn", message: "hi", timeoutSeconds }),
     );
-    expect(timeout).toBeUndefined();
+    expect(timeout).toBe(expected);
   });
 });

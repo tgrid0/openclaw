@@ -38,14 +38,14 @@ describe("compaction safety timeout", () => {
       onCancel,
     });
     const assertion = expect(pending).rejects.toThrow("Compaction timed out");
-    await vi.advanceTimersByTimeAsync(180_000);
+    await vi.advanceTimersByTimeAsync(36_000_000);
     await assertion;
     expect(onCancel).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
   });
 
   it.each([
-    { seconds: undefined, expected: 180_000 },
+    { seconds: undefined, expected: 36_000_000 },
     { seconds: 1800.7, expected: 1_800_000 },
   ])("resolves configured timeout seconds $seconds", ({ seconds, expected }) => {
     expect(

@@ -30,6 +30,8 @@ type PreparedSessionCreateRoot = {
 
 export async function prepareSessionCreateRequestedCwd(params: {
   cfg: OpenClawConfig;
+  adoptCwd?: boolean;
+  worktree?: boolean;
   requestedCwd?: string;
   requestedExecNode?: string;
   permissionMode?: SessionsCreateParams["permissionMode"];
@@ -37,6 +39,20 @@ export async function prepareSessionCreateRequestedCwd(params: {
   clientScopes: readonly string[];
 }): Promise<Result<string | undefined, ErrorShape>> {
   const { requestedCwd, requestedExecNode } = params;
+  // Adopted directories stay externally managed, without worktree or remote-node provisioning.
+  const adoptCwdError =
+    params.adoptCwd !== true
+      ? undefined
+      : params.worktree === true
+        ? "sessions.create adoptCwd cannot be combined with worktree=true"
+        : !requestedCwd
+          ? "sessions.create adoptCwd requires cwd"
+          : requestedExecNode
+            ? "sessions.create adoptCwd cannot target execNode"
+            : undefined;
+  if (adoptCwdError) {
+    return invalidSessionRequest(adoptCwdError);
+  }
   const cwdIsAbsolute =
     !requestedCwd ||
     (requestedExecNode

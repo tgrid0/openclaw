@@ -43,7 +43,7 @@ export function registerAgentTurnCommand(
     .option("--json", "Output result as JSON", false)
     .option(
       "--timeout <seconds>",
-      "Override agent command timeout (seconds, default 600 or config value)",
+      "Override agent command timeout (seconds, default 36000 or config value)",
     )
     .addHelpText(
       "after",
@@ -126,7 +126,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/age
     )
     .option("--auth-env-only", "Use provider credentials from environment variables only", false)
     .option("--no-auth-env-only", "Allow stored and external CLI credential discovery")
-    .option("--timeout <seconds>", "Agent deadline in seconds", "600")
+    .option("--timeout <seconds>", "Agent deadline in seconds", "36000")
     .option("--json", "Emit the stable agent-exec JSON envelope", false)
     .addHelpText(
       "after",
@@ -162,7 +162,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/age
         messageFile: opts.messageFile ?? parentOpts?.messageFile,
         model: opts.model ?? parentOpts?.model,
         thinking: opts.thinking ?? parentOpts?.thinking,
-        // Exec --timeout defaults to "600"; inherit a parent flag only when the
+        // Exec --timeout defaults to "36000"; inherit a parent flag only when the
         // leaf source is default. An explicit nested --timeout must win.
         timeout: inheritOptionFromParent<string>(command, "timeout") ?? opts.timeout,
         json: opts.json === true || parentOpts?.json === true,

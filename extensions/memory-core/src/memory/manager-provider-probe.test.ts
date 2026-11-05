@@ -45,8 +45,8 @@ describe("embedding availability probes", () => {
   }
 
   it.each([
-    { providerId: "openai", timeoutMs: 60_000, inlineQueryTimeoutMs: undefined },
-    { providerId: "local", timeoutMs: 300_000, inlineQueryTimeoutMs: undefined },
+    { providerId: "openai", timeoutMs: 36_000_000, inlineQueryTimeoutMs: undefined },
+    { providerId: "local", timeoutMs: 36_000_000, inlineQueryTimeoutMs: undefined },
     { providerId: "openai", timeoutMs: 90_000, inlineQueryTimeoutMs: 90_000 },
   ])(
     "bounds $providerId diagnostics with the $timeoutMs ms query budget without retrying",
@@ -80,7 +80,7 @@ describe("embedding availability probes", () => {
   );
 
   it("preserves managed readiness and allows a slow healthy query within its budget", async () => {
-    const { probe, options, completion, embed } = await createProbe();
+    const { probe, options, completion, embed } = await createProbe("openai", 60_000);
     const timerCountWithProbeDeadline = vi.getTimerCount();
     try {
       const control = options?.[MEMORY_SEARCH_DEADLINE_CONTROL];

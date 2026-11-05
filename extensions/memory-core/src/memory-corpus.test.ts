@@ -27,16 +27,16 @@ it.each(["timer", "event-loop"] as const)(
       },
     });
     if (clock === "timer") {
-      await vi.advanceTimersByTimeAsync(30_000);
+      await vi.advanceTimersByTimeAsync(36_000_000);
     } else {
-      vi.spyOn(performance, "now").mockReturnValue(startedAt + 30_001);
+      vi.spyOn(performance, "now").mockReturnValue(startedAt + 36_000_001);
       pending.resolve(["late semantic result"]);
     }
     expect(await result).toMatchObject({
       outcome: "partial",
       value: partial,
       deadline: true,
-      error: "memory_search timed out after 30s",
+      error: "memory_search timed out after 36000s",
     });
     expect(signal?.aborted).toBe(true);
     pending.resolve([]);
@@ -45,7 +45,7 @@ it.each(["timer", "event-loop"] as const)(
 
 it("does not replace a caller failure with partial results", async () => {
   const parent = new AbortController();
-  const failure = new Error("memory_search timed out after 30s");
+  const failure = new Error("memory_search timed out after 36000s");
   const result = runMemoryCorpusDeadline({
     operation: "memory_search",
     parentSignal: parent.signal,
@@ -70,7 +70,7 @@ it("exempts a paused owned phase from the corpus deadline", async () => {
       control.report("pause");
       // A managed local service may take longer than the whole-search budget to
       // become ready; that wait is owned by localService.readyTimeoutMs.
-      await vi.advanceTimersByTimeAsync(60_000);
+      await vi.advanceTimersByTimeAsync(36_060_000);
       control.report("resume");
       expect(signal.aborted).toBe(false);
       return "ok";
@@ -90,15 +90,15 @@ it("re-arms the banked budget when an owned phase completes", async () => {
       control.report("pause");
       await vi.advanceTimersByTimeAsync(60_000);
       control.report("resume");
-      // Only the 25s banked before the pause remains for post-readiness work.
-      await vi.advanceTimersByTimeAsync(24_999);
+      // Readiness preserves the ten-hour budget minus the five seconds already spent.
+      await vi.advanceTimersByTimeAsync(36_000_000 - 5_001);
       expect(currentSignal.aborted).toBe(false);
       await vi.advanceTimersByTimeAsync(2);
       currentSignal.throwIfAborted();
       return "late";
     },
   });
-  await expect(result).rejects.toThrow("memory_search timed out after 30s");
+  await expect(result).rejects.toThrow("memory_search timed out after 36000s");
   expect(signal?.aborted).toBe(true);
 });
 
@@ -111,13 +111,13 @@ it("expires immediately when the budget is already consumed at pause time", asyn
     run: async (currentSignal, control) => {
       signal = currentSignal;
       // The overdue timer may not be serviced yet when the owned phase starts.
-      vi.spyOn(performance, "now").mockReturnValue(startedAt + 30_000);
+      vi.spyOn(performance, "now").mockReturnValue(startedAt + 36_000_000);
       control.report("pause");
       currentSignal.throwIfAborted();
       return "unreachable";
     },
   });
-  await expect(result).rejects.toThrow("memory_search timed out after 30s");
+  await expect(result).rejects.toThrow("memory_search timed out after 36000s");
   expect(signal?.aborted).toBe(true);
 });
 

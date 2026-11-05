@@ -214,7 +214,7 @@ describe("memory_search index versions", () => {
     const execution = tool.execute("rebuild-deadline", query);
     try {
       await entered.promise;
-      await vi.advanceTimersByTimeAsync(30_000);
+      await vi.advanceTimersByTimeAsync(36_000_000);
       const result = await execution;
       expect(result.details).toMatchObject({
         unavailable: true,

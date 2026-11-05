@@ -108,7 +108,7 @@ it("preserves all seven scheduling phases independently of publication order", (
     terminal("cleanup", { archiveAtMs: 1 }),
     terminal("kill", { killReconciliation: { killedAt: 1 } }),
     terminal("young", { createdAt: now, execution: { status: "running" } }),
-    terminal("stale", { createdAt: now - 3 * 60 * 60 * 1_000, execution: { status: "running" } }),
+    terminal("stale", { createdAt: now - 11 * 60 * 60 * 1_000, execution: { status: "running" } }),
     terminal("recovery", { terminalOwner: "interrupted-recovery" }),
     terminal("suspended", { delivery: { status: "suspended", suspendedAt: 1 } }),
     terminal("wake", { requesterSettleWake: { status: "pending", attemptCount: 0 } }),

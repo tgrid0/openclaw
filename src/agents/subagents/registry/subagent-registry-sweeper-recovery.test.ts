@@ -162,8 +162,8 @@ describe("subagent registry recovery scheduling", () => {
     runs.clear();
     for (const [runId, ageMs] of [
       ["recent-a", 60_000],
-      ["stale-a", 3 * 60 * 60_000],
-      ["stale-b", 4 * 60 * 60_000],
+      ["stale-a", 11 * 60 * 60_000],
+      ["stale-b", 12 * 60 * 60_000],
       ["recent-b", 90_000],
     ] as const) {
       runs.set(runId, {
@@ -192,7 +192,7 @@ describe("subagent registry recovery scheduling", () => {
     ]);
 
     recoverRow.mockClear();
-    vi.setSystemTime(Date.now() + 2 * 60 * 60_000);
+    vi.setSystemTime(Date.now() + 10 * 60 * 60_000);
     await sweeper.sweepOnce();
     expect(recoverRow.mock.calls.map(([params]) => params.runId)).toEqual([
       "interrupted",

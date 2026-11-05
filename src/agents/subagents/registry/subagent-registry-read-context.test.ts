@@ -164,7 +164,7 @@ describe("subagent registry read index", () => {
     expect(before.getDisplaySubagentRun(childSessionKey)).toBe(active);
     expect(before.countActiveDescendantRuns(root)).toBe(1);
     expect(before.countPendingDescendantRuns(root)).toBe(1);
-    const after = grouped.atTime(startedAt + 2 * 60 * 60_000 + 1);
+    const after = grouped.atTime(startedAt + 10 * 60 * 60_000 + 1);
     expect(after.getDisplaySubagentRun(childSessionKey)).toBe(ended);
     expect(after.countActiveDescendantRuns(root)).toBe(0);
     expect(after.countPendingDescendantRuns(root)).toBe(0);

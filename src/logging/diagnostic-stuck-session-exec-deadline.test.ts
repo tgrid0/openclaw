@@ -161,7 +161,7 @@ describe("heartbeat recovery after exec preparation", () => {
       try {
         await preparing.promise;
         await waitForDiagnosticEventsDrained();
-        await vi.advanceTimersByTimeAsync(930_000);
+        await vi.advanceTimersByTimeAsync(36_030_000);
         expect(await classified.promise).toMatchObject({ allowActiveAbort: true, sessionId });
         expect(getDiagnosticSessionActivitySnapshot(ref).activeToolDeadlineAtMs).toBeUndefined();
 
@@ -172,7 +172,7 @@ describe("heartbeat recovery after exec preparation", () => {
         await waitForDiagnosticEventsDrained();
         const deadline = getDiagnosticSessionActivitySnapshot(ref).activeToolDeadlineAtMs;
         if (deadlineState !== "absent") {
-          expect(deadline).toBe(Date.now() + 1_400_000 + 900_000);
+          expect(deadline).toBe(Date.now() + 1_400_000 + 36_000_000);
         }
         if (deadlineState === "expired") {
           vi.setSystemTime(deadline! + 1);

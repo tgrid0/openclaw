@@ -325,6 +325,8 @@ export const sessionCreateHandlers: GatewayRequestHandlers = {
     const clientScopes = Array.isArray(client?.connect?.scopes) ? [...client.connect.scopes] : [];
     const preparedCwd = await prepareSessionCreateRequestedCwd({
       cfg,
+      adoptCwd: p.adoptCwd,
+      worktree: p.worktree,
       requestedCwd,
       requestedExecNode,
       permissionMode: p.permissionMode,

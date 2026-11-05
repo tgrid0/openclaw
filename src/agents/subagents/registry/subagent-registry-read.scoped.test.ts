@@ -194,7 +194,7 @@ describe("subagent registry scoped reads", () => {
       childSessionKey,
       requesterSessionKey: ownerKey,
       generation: 1,
-      createdAt: Date.now() - 3 * 60 * 60_000,
+      createdAt: Date.now() - 11 * 60 * 60_000,
     });
     const latest = createRun({
       runId: "capacity-terminal",

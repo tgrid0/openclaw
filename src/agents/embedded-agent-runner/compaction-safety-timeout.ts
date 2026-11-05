@@ -6,7 +6,7 @@ import { createAbortError, racePromiseWithAbortSignal } from "../../infra/abort-
 import { runAbortableTimeout } from "../../node-host/with-timeout.js";
 import { trackAsyncWork } from "../../shared/async-work-scope.js";
 
-const EMBEDDED_COMPACTION_TIMEOUT_MS = 180_000;
+const EMBEDDED_COMPACTION_TIMEOUT_MS = 36_000_000;
 // Progress resets keep a streaming request alive, so the whole operation also has a
 // hard ceiling. Ten windows leaves several times the headroom a near-full-context
 // staged compaction needs, while still stopping a stream that trickles forever.
